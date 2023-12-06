@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<SAGisExcelExportDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:noNamespaceSchemaLocation="SAGisExcelExportDefinition.xsd">
+	<SAGisExcelExportItem>
+		<FeatureClass>sg_flurstueck_f</FeatureClass>
+		<Title>Nutzungsarten FS/GB (Statistik)</Title>
+		<WorkSheet>
+			<AccessRight>sg_flurstueck_f</AccessRight>
+			<TabColor>red</TabColor>
+			<WorkSheetName>Nutzungsart FS (Statistik)</WorkSheetName>
+			<Sql>
+			<![CDATA[
+			SELECT tn_key_desc AS NUTZUNG, SUM(area) AS FLAECHE
+			FROM sg_nutzung_f 
+			WHERE area IS NOT NULL
+			GROUP BY tn_key_desc
+			ORDER BY tn_key_desc
+			]]>
+			</Sql>
+		</WorkSheet>
+		<WorkSheet>
+			<AccessRight>sg_gebaeude_f</AccessRight>
+			<TabColor>green</TabColor>
+			<WorkSheetName>Nutzungsart GB (Statistik)</WorkSheetName>
+			<Sql>
+			<![CDATA[
+			SELECT gfk_val AS NUTZUNG, SUM(area) AS FLAECHE
+			FROM sg_gebaeude_f 
+			WHERE area IS NOT NULL
+			GROUP BY gfk_val
+			ORDER BY gfk_val
+			]]>
+			</Sql>
+		</WorkSheet>
+	</SAGisExcelExportItem>
+</SAGisExcelExportDefinition>

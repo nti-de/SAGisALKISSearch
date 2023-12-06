@@ -1,0 +1,227 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	
+	<xs:element name="SAGisGnDlgConfig">
+		<xs:complexType>
+			<xs:sequence>
+
+				<xs:element name="Container" minOccurs="1" maxOccurs="1">
+					<xs:complexType>
+						<xs:sequence>
+							<!-- <xs:element type="xs:string" name="Class" minOccurs="1" maxOccurs="1"/> -->
+							<xs:element type="xs:string" name="Caption" minOccurs="1" maxOccurs="1"/>
+							<xs:element type="xs:string" name="CssFiles" minOccurs="0" maxOccurs="1"/>
+							<xs:element type="xs:string" name="SchemaNamePlaceHolder" minOccurs="0" maxOccurs="1" default="{SCHEMA_NAME_PLACEHOLDER}"/>
+							<xs:element type="xs:string" name="SchemaName" minOccurs="0" maxOccurs="1"/>
+							<xs:element name="ActivityLog" minOccurs="0" maxOccurs="1">
+								<xs:complexType>
+									<xs:attribute type="xs:boolean" default="false" name="Active" use="optional"/>
+									<xs:attribute type="xs:string" name="InfoLogColumn" use="optional"/>
+								</xs:complexType>
+							</xs:element>
+							
+							<xs:element name="SearchTemplate">
+								<xs:complexType mixed="true">
+									<xs:sequence>
+										<xs:element name="Queries" minOccurs="0">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Query" minOccurs="0" maxOccurs="unbounded">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element type="xs:string" name="BindTo" minOccurs="1" maxOccurs="1"/>
+																<xs:element type="xs:string" name="Sql" minOccurs="1" maxOccurs="1"/>
+																<xs:element type="xs:string" default="KEY" name="KeyValueField" minOccurs="0" maxOccurs="1" />
+																<xs:element type="xs:string" default="CAPTION" name="CaptionValueField" minOccurs="0" maxOccurs="1" />
+																<xs:element type="xs:string" default="{1} ({0})" name="CaptionFormat" minOccurs="0" maxOccurs="1" />
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="Search" minOccurs="1" maxOccurs="1">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element type="xs:string" name="Sql" minOccurs="1" maxOccurs="1"/>
+													<xs:element type="xs:string" name="FixedSqlWhere" minOccurs="0" maxOccurs="1" />
+
+													<xs:element name="Parameter" maxOccurs="unbounded" minOccurs="0">
+														<xs:complexType>
+															<xs:simpleContent>
+																<xs:extension base="xs:string">
+																	<!--<xs:attribute type="xs:string" default="" name="DataType" use="optional"/>-->
+																	<xs:attribute type="xs:string" name="DbField" use="required"/>
+																	<xs:attribute type="xs:string" name="FormField" use="required"/>
+																	<xs:attribute type="xs:string" default="" name="DbJoinedTableName" use="optional"/>
+																	<xs:attribute type="xs:string" default="" name="DbTableAlias" use="optional"/>
+																	<xs:attribute type="xs:string" default="" name="DefaultValue" use="optional"/>
+																	<xs:attribute type="xs:boolean" default="true" name="CaseSensitive" use="optional"/>
+																	<xs:attribute type="xs:boolean" default="false" name="Range" use="optional"/>
+																	<!--
+																	<xs:attribute type="xs:boolean" default="true" name="Like" use="optional"/>
+																	<xs:attribute type="xs:boolean" default="true" name="In" use="optional"/>
+																	-->
+																	<xs:attribute name="WhereCondition" default="IsEqual" use="optional">
+																		<xs:simpleType>
+																			<xs:restriction base="xs:string">
+																				<xs:enumeration value="In"/>
+																				<xs:enumeration value="Like"/>
+																				<xs:enumeration value="IsEqual"/>
+																			</xs:restriction>
+																		</xs:simpleType>
+																	</xs:attribute>
+																	
+																	<xs:attribute type="xs:string" default="AND" name="SqlOperator" use="optional"/>
+																	<xs:attribute type="xs:string" default="String" name="DbFieldMgPropertyType" use="optional"/>
+																</xs:extension>
+															</xs:simpleContent>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+										
+										<xs:element type="xs:string" name="SearchTemplate" maxOccurs="1" minOccurs="1" />
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							
+							<xs:element name="InfoTemplate">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element type="xs:boolean" default="true" name="Editable" minOccurs="0" maxOccurs="1"/>
+										<xs:element name="Panels">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="Panel" maxOccurs="unbounded" minOccurs="0">
+														<xs:complexType>
+															<xs:sequence>
+																<xs:element type="xs:string" name="Caption"/>
+																<xs:element type="xs:string" name="Authorisation" minOccurs="0" maxOccurs="1"/>
+																<xs:element type="xs:boolean" default="true" name="Active" minOccurs="0" maxOccurs="1"/>
+																<xs:element type="xs:boolean" default="false" name="HideIfQueryIsEmpty" minOccurs="0" maxOccurs="1"/>
+																<xs:element type="xs:boolean" default="true" name="ShowDatacount" minOccurs="0" maxOccurs="1"/>
+																<xs:element type="xs:integer" name="height" minOccurs="0" maxOccurs="1" default="600" />
+																<xs:element name="Query">
+																	<xs:complexType>
+																		<xs:sequence>
+																			
+																			<xs:element type="xs:string" name="Name" minOccurs="0" maxOccurs="1" />
+																			<xs:element type="xs:boolean" name="AllowEmpty" minOccurs="0" maxOccurs="1" default="true" />
+																			<xs:element type="xs:integer" name="AllowMaxResults" minOccurs="0" maxOccurs="1" />
+																			<xs:element type="xs:string" name="Parent" minOccurs="0" maxOccurs="1" />
+																			<xs:choice>
+																				<xs:element type="xs:string" name="Sql" minOccurs="1" maxOccurs="1" />
+																				<xs:element name="Intersection" minOccurs="1" maxOccurs="1" >
+																					<xs:complexType>
+																						<xs:sequence>
+																							<xs:element type="xs:string" name="TargetFeatureClass" minOccurs="0" maxOccurs="1" />
+																							<xs:element type="xs:string" name="OrderBy" minOccurs="0" maxOccurs="1"/>
+																							<xs:element type="xs:string" name="Filter" minOccurs="0" maxOccurs="1"/>
+																							<xs:element type="xs:integer" name="MgFeatureSpatialOperation" minOccurs="0" maxOccurs="1" default="-1"/>
+																							<xs:element type="xs:string" name="Property" minOccurs="0" maxOccurs="unbounded"/>
+																							
+																							<xs:element name="Translation" maxOccurs="unbounded" minOccurs="0">
+																								<xs:complexType>
+																									<xs:sequence>
+																										<xs:element type="xs:string" name="Sql" minOccurs="1" maxOccurs="1" />
+																										<xs:element type="xs:string" name="FromColumn" minOccurs="1" maxOccurs="1" />
+																										<xs:element type="xs:string" name="ValueColumn" minOccurs="1" maxOccurs="1" />
+																										<xs:element type="xs:string" name="IdColumn" minOccurs="1" maxOccurs="1" />
+																									</xs:sequence>
+																								</xs:complexType>
+																							</xs:element>
+																						</xs:sequence>
+																					</xs:complexType>
+																				</xs:element>
+																			</xs:choice>
+																			
+																			<xs:element name="ShowInMap" minOccurs="0" maxOccurs="1" >
+																				<xs:complexType>
+																					<xs:sequence>
+																						<xs:element type="xs:string" name="LayerFeatureClassName" minOccurs="1" maxOccurs="1" />
+																						<xs:element type="xs:string" name="BindTo" minOccurs="1" maxOccurs="1"/>
+																					</xs:sequence>
+																				</xs:complexType>
+																			</xs:element>
+																			
+																			
+																		</xs:sequence>
+																		<xs:attribute type="xs:string" name="JsDataColumns" />
+																	</xs:complexType>
+																</xs:element>
+
+																<xs:element name="Bindings" maxOccurs="unbounded" minOccurs="0">
+																	<xs:complexType>
+																		<xs:sequence>
+																			<xs:element type="xs:boolean" default="true" name="Active" minOccurs="0" maxOccurs="1"/>
+																			<xs:element type="xs:string" name="Caption" minOccurs="0" maxOccurs="1" />
+																			<xs:element type="xs:string" name="Sql" minOccurs="1" maxOccurs="1" />
+																			<xs:element type="xs:string" name="BindTo" minOccurs="1" maxOccurs="1"/>
+																			<xs:element type="xs:string" name="Authorisation" minOccurs="0" maxOccurs="1"/>
+																			<xs:element name="HeaderText" maxOccurs="unbounded" minOccurs="0">
+																				<xs:complexType>
+																					<xs:simpleContent>
+																						<xs:extension base="xs:string">
+																							<xs:attribute type="xs:string" name="From" use="required"/>
+																							<xs:attribute type="xs:string" name="To" use="required"/>
+																						</xs:extension>
+																					</xs:simpleContent>
+																				</xs:complexType>
+																			</xs:element>
+																			<xs:element type="xs:boolean" name="ShowHeaderWhenEmpty" minOccurs="0" maxOccurs="1" default="false" />
+																			
+																			<xs:element name="JavaScriptClick" maxOccurs="unbounded" minOccurs="0">
+																				<xs:complexType>
+																					<xs:sequence>
+																						<xs:element type="xs:string" name="Column" minOccurs="1" maxOccurs="1" />
+																						<xs:element type="xs:string" name="JsFn" minOccurs="1" maxOccurs="1" />
+																					</xs:sequence>
+																				</xs:complexType>
+																			</xs:element>
+																		</xs:sequence>
+																	</xs:complexType>
+																</xs:element>
+
+																<xs:choice>
+																	<xs:element type="xs:string" name="ItemTemplate" maxOccurs="1" minOccurs="1" />
+
+																	<xs:element name="NoItemTemplate" maxOccurs="1" minOccurs="1" >
+																		<xs:complexType>
+																			<xs:sequence>
+																				<xs:element name="ColumnNameTranslation" maxOccurs="unbounded" minOccurs="0">
+																					<xs:complexType>
+																						<xs:simpleContent>
+																							<xs:extension base="xs:string">
+																								<xs:attribute type="xs:string" name="From" use="required"/>
+																								<xs:attribute type="xs:string" name="To" use="required"/>
+																							</xs:extension>
+																						</xs:simpleContent>
+																					</xs:complexType>
+																				</xs:element>
+																			</xs:sequence>
+																		</xs:complexType>
+																	</xs:element>
+																	
+																</xs:choice>
+
+																<xs:element type="xs:string" name="FooterTemplate" maxOccurs="1" minOccurs="0" />
+															</xs:sequence>
+														</xs:complexType>
+													</xs:element>
+												</xs:sequence>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+
+
+
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+</xs:schema>

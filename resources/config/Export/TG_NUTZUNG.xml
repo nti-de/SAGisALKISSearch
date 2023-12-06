@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<SAGisExcelExportDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:noNamespaceSchemaLocation="SAGisExcelExportDefinition.xsd">
+	<SAGisExcelExportItem>
+		<FeatureClass>sg_flurstueck_f</FeatureClass>
+		<Title>Nutzungsarten (Statistik)</Title>
+		
+		<WorkSheet>
+			<AccessRight>sg_gebaeude_f</AccessRight>
+			<TabColor>green</TabColor>
+			<WorkSheetName>Nutzungsarten und Funktion (Statistik)</WorkSheetName>
+			
+			<ColumnHeaderAliases>
+				<Alias ColumnName="ART_TN" Title="Nutzungsart">Nutzungsart</Alias>
+				<Alias ColumnName="ART_TN_TEXT" Title="Nutzungsart (Text)">Nutzungsart (Text)</Alias>
+				<Alias ColumnName="TN_KEY_DESC" Title="Funktion">Funktion</Alias>
+				<Alias ColumnName="FLAECHE" Title="Fläche">Fläche</Alias>
+			</ColumnHeaderAliases>
+			
+			<Sql>
+			<![CDATA[
+			SELECT 
+				a.art_tn,
+				tg_objektart.name as art_tn_text,
+				alkisgeometrie_f.tn_key_desc,
+				round(sum(a.afl::numeric),2) as flaeche
+			FROM tg_nutzung a
+				LEFT JOIN tg_objektarten tg_objektart ON tg_objektart.objektart = a.art_tn
+				INNER JOIN alkisgeometrie_f ON 
+					alkisgeometrie_f.id_hash = a.id_tn_hash AND 
+					alkisgeometrie_f.endet is null
+			WHERE a.endet is null
+			GROUP BY 
+				a.art_tn, 
+				tg_objektart.name,
+				alkisgeometrie_f.tn_key_desc
+			ORDER BY 
+				tg_objektart.name,
+				alkisgeometrie_f.tn_key_desc
+
+			]]>
+			</Sql>
+		</WorkSheet>
+		
+		<WorkSheet>
+			<AccessRight>sg_flurstueck_f</AccessRight>
+			<TabColor>red</TabColor>
+			<WorkSheetName>Nutzungsarten (Statistik)</WorkSheetName>
+			
+			<ColumnHeaderAliases>
+				<Alias ColumnName="ART_TN" Title="Nutzungsart">Nutzungsart</Alias>
+				<Alias ColumnName="ART_TN_TEXT" Title="Nutzungsart (Text)">Nutzungsart (Text)</Alias>
+				<Alias ColumnName="FLAECHE" Title="Fläche">Fläche</Alias>
+			</ColumnHeaderAliases>
+			
+			<Sql>
+			<![CDATA[
+			SELECT 
+				a.art_tn, 
+				tg_objektart.name as art_tn_text,
+				round(sum(a.afl::numeric),2) as flaeche
+			FROM tg_nutzung a
+				LEFT JOIN tg_objektarten tg_objektart ON tg_objektart.objektart = a.art_tn
+			WHERE 
+				a.endet is null
+			GROUP BY 
+				a.art_tn,
+				tg_objektart.name
+			ORDER BY 
+				tg_objektart.name
+
+			]]>
+			</Sql>
+		</WorkSheet>
+		
+		
+	</SAGisExcelExportItem>
+</SAGisExcelExportDefinition>

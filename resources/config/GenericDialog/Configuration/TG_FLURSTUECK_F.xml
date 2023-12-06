@@ -1,0 +1,1109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<SAGisGnDlgConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:noNamespaceSchemaLocation="SAGisGnDlgConfig.xsd">
+	<!-- 
+	OSGeo.PostgreSQL
+	SG_FLURSTUECK_F
+	Topographics Flurstück 
+	-->
+	<Container>
+		<Caption>Flurstück</Caption>
+		
+		<!--<SchemaNamePlaceHolder>{SCHEMA_NAME_PLACEHOLDER}</SchemaNamePlaceHolder>-->
+		<!--<SchemaName>alkis.</SchemaName>-->
+		
+		<ActivityLog Active="false" InfoLogColumn="fsk" />
+		
+		<!-- 
+		*
+		* SearchTemplate
+		*
+		-->
+		<SearchTemplate>
+			<Queries>
+				<Query> 
+					<BindTo>gmk_gmn</BindTo>
+					<Sql><![CDATA[
+						SELECT a.gid, a.gmk_gmn, a.bez, count(b.gid) AS NUM
+						FROM 	{SCHEMA_NAME_PLACEHOLDER}AX_GEMARKUNG a
+							LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}AX_FLURSTUECK b ON (b.gmk_gmn = a.gmk_gmn)
+						GROUP BY a.gid, a.gmk_gmn, a.bez
+						HAVING count(b.gid) > 0
+						ORDER BY a.bez ASC
+					]]></Sql>
+					
+					<KeyValueField>gmk_gmn</KeyValueField>
+					<CaptionValueField>bez</CaptionValueField>
+				</Query>
+				
+				<Query> 
+					<BindTo>gemeinde_nr</BindTo>
+					<Sql><![CDATA[
+						SELECT distinct(a.gemeinde_nr), a.gemeinde
+						FROM 	{SCHEMA_NAME_PLACEHOLDER}v_sg_me_geb_lagebezeichnung a
+						WHERE 	a.gemeinde_nr IS NOT NULL AND a.gemeinde IS NOT NULL
+						ORDER BY a.gemeinde ASC
+					]]></Sql>
+					
+					<KeyValueField>name</KeyValueField>
+					<CaptionValueField>anzeigetext</CaptionValueField>
+				</Query>
+				
+				<Query> 
+					<BindTo>tg_nutzung</BindTo>
+					<Sql><![CDATA[
+						SELECT 
+							distinct(a.art_tn),  
+							tg_objektart.name,
+							count(1) as total,
+							name || ' (' || count(1) || ')' as caption
+						FROM tg_nutzung a
+							LEFT JOIN tg_objektarten tg_objektart ON tg_objektart.objektart = a.art_tn
+						WHERE endet is null
+						GROUP BY a.art_tn, tg_objektart.name
+						ORDER BY total desc, tg_objektart.name
+					]]></Sql>
+					
+					<KeyValueField>art_tn</KeyValueField>
+					<CaptionValueField>caption</CaptionValueField>
+				</Query>
+
+				<Query> 
+					<BindTo>bs_art</BindTo>
+					<Sql><![CDATA[
+						SELECT distinct(mebs.bar) as name, c.anzeigetext
+						FROM v_sg_me_fs_bs mebs
+						LEFT JOIN codelist c ON c.name = mebs.bar AND c.art = 'AX_Buchungsart_Buchungsstelle'
+						WHERE mebs.endet IS NULL
+						ORDER BY c.anzeigetext
+					]]></Sql>
+					<KeyValueField>name</KeyValueField>
+					<CaptionValueField>anzeigetext</CaptionValueField>
+				</Query>
+				
+				<Query> 
+					<BindTo>eigentuemerart</BindTo>
+					<Sql><![CDATA[
+						SELECT distinct(nnummer.art), c.anzeigetext
+						FROM ax_namensnummer nnummer
+							LEFT JOIN CODELIST c ON c.name = CAST(nnummer.art AS VARCHAR) AND c.art = 'AX_Eigentuemerart_Namensnummer'
+						WHERE nnummer.art is not null AND nnummer.endet IS NULL
+						ORDER BY c.anzeigetext
+					]]></Sql>
+					<KeyValueField>name</KeyValueField>
+					<CaptionValueField>anzeigetext</CaptionValueField>
+				</Query>
+				
+				<Query> 
+					<BindTo>anrede</BindTo>
+					<Sql><![CDATA[
+						SELECT distinct(c.name), c.anzeigetext
+						FROM codelist c
+						WHERE c.art = 'AX_Anrede_Person'
+						ORDER BY c.anzeigetext
+					]]></Sql>
+					<KeyValueField>name</KeyValueField>
+					<CaptionValueField>anzeigetext</CaptionValueField>
+					<CaptionFormat>{1}</CaptionFormat>
+				</Query>
+				
+				<Query> 
+					<BindTo>sondereintrag_typ</BindTo>
+					<Sql><![CDATA[
+						SELECT distinct(b.fk_id), b.bedeutung
+						FROM sg_sondereintraege a
+							LEFT JOIN sg_sondereintraege_domain b ON b.fk_id = a.r_typ AND b.aktiv = true
+						ORDER BY b.bedeutung
+					]]></Sql>
+					<KeyValueField>wert</KeyValueField>
+					<CaptionValueField>bedeutung</CaptionValueField>
+					<CaptionFormat>{1}</CaptionFormat>
+				</Query>
+			
+				<Query>
+					<BindTo>bblatt_bart</BindTo>
+					<Sql><![CDATA[
+						SELECT distinct(bblatt.blt), c.anzeigetext
+						FROM ax_buchungsblatt bblatt 
+							LEFT JOIN codelist c ON c.name = CAST(bblatt.blt AS VARCHAR) AND c.art = 'AX_Blattart_Buchungsblatt'
+						WHERE bblatt.endet IS NULL
+						ORDER BY c.anzeigetext
+					]]></Sql>
+					<KeyValueField>blt</KeyValueField>
+					<CaptionValueField>anzeigetext</CaptionValueField>
+					<CaptionFormat>{1}</CaptionFormat>
+				</Query>
+				
+				<Query>
+					<BindTo>BUCHUNG_FS_BUCHUNGSBLATTBEZIRK</BindTo>
+					<Sql><![CDATA[
+						SELECT distinct(bblatt.bbz_bbb), ax_buchungsblattbezirk.bez as anzeigetext
+						FROM ax_buchungsblatt bblatt 
+							LEFT JOIN ax_buchungsblattbezirk ON 
+								ax_buchungsblattbezirk.sll_bbb = bblatt.bbz_bbb AND 
+								ax_buchungsblattbezirk.zst_lan = bblatt.bbz_lan AND 
+								ax_buchungsblattbezirk.endet IS NULL 
+						WHERE bblatt.endet IS NULL
+						ORDER BY ax_buchungsblattbezirk.bez
+					]]></Sql>
+					<KeyValueField>blt</KeyValueField>
+					<CaptionValueField>anzeigetext</CaptionValueField>
+					<CaptionFormat>{1}</CaptionFormat>
+				</Query>
+			</Queries>
+
+			<Search>
+				<Sql><![CDATA[
+					SELECT DISTINCT(sg_flurstueck_f.objectid), sg_flurstueck_f.fsk
+					FROM {SCHEMA_NAME_PLACEHOLDER}sg_flurstueck_f 
+						LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}v_sg_me_fs_lagebezeichnung rel_lage ON rel_lage.flurstueckskennzeichen = sg_flurstueck_f.fsk
+						
+						LEFT JOIN v_sg_me_fs_bs mebs 		ON mebs.id_hash_fs = sg_flurstueck_f.id_hash AND mebs.endet IS NULL
+						LEFT JOIN ax_buchungsblatt bblatt 	ON bblatt.id_hash = mebs.best_von_hash AND bblatt.endet IS NULL AND bblatt.blt != 5000
+						LEFT JOIN ax_namensnummer nnummer 	ON nnummer.bst_von_hash = bblatt.id_hash AND nnummer.endet IS NULL
+						LEFT JOIN ax_person person			ON person.id_hash = nnummer.benennt_hash AND person.endet IS NULL
+						
+						LEFT JOIN tg_nutzung nutzung		ON nutzung.fsk = sg_flurstueck_f.fsk AND nutzung.endet IS NULL AND nutzung.sfl > 0.99
+						
+						LEFT JOIN sg_sondereintraege 		ON sg_sondereintraege.flurstueckskennzeichen = sg_flurstueck_f.fsk
+					{WHERE_PARAMETERS}
+					ORDER BY sg_flurstueck_f.fsk ASC
+				]]></Sql>
+
+				<Parameter DbField="gmk_gmn" FormField="gmk_gmn" />
+				<Parameter DbField="fln" FormField="fln"/>
+				<Parameter DbField="fsn_zae" FormField="fsn_zae" />
+				<Parameter DbField="fsn_nen" FormField="fsn_nen" />
+				<Parameter DbField="afl" FormField="AMTLICHEFLAECHE" Range="true"/>
+				<Parameter DbField="area" FormField="AREA" Range="true"/>
+				<Parameter DbField="fsk" FormField="fsk" DbTableAlias="sg_flurstueck_f" WhereCondition="Like" />
+				
+				<Parameter DbField="gemeinde_nr" DbJoinedTableName="v_sg_me_geb_lagebezeichnung" DbTableAlias="rel_lage" FormField="gemeinde_nr" DbFieldMgPropertyType="String" />
+				<Parameter DbField="strasse" DbJoinedTableName="v_sg_me_fs_lagebezeichnung" DbTableAlias="rel_lage" FormField="lage_strasse" WhereCondition="Like" DbFieldMgPropertyType="String" />
+				<Parameter DbField="hausnummer" DbJoinedTableName="v_sg_me_fs_lagebezeichnung" DbTableAlias="rel_lage" FormField="lage_hausnummer" WhereCondition="Like" DbFieldMgPropertyType="String" />
+
+				<Parameter DbField="nof" DbJoinedTableName="ax_person" DbTableAlias="person" FormField="nof" WhereCondition="Like" />
+				<Parameter DbField="vna" DbJoinedTableName="ax_person" DbTableAlias="person" FormField="vna" WhereCondition="Like" />
+
+				<Parameter DbField="art_tn" DbJoinedTableName="tg_nutzung" DbTableAlias="nutzung" FormField="tg_nutzung" WhereCondition="In" />
+				<Parameter DbField="bar" DbJoinedTableName="v_sg_me_fs_bs" DbTableAlias="mebs" FormField="bs_art" DbFieldMgPropertyType="String" />
+				<Parameter DbField="art" DbJoinedTableName="ax_namensnummer" DbTableAlias="nnummer" FormField="eigentuemerart" />
+				<Parameter DbField="anr" DbJoinedTableName="ax_person" DbTableAlias="person" FormField="anrede" />
+				
+				<Parameter DbField="r_typ" DbJoinedTableName="sg_sondereintraege" DbTableAlias="sg_sondereintraege" FormField="sondereintrag_typ" />
+				<Parameter DbField="sondereintrag" DbJoinedTableName="sg_sondereintraege" DbTableAlias="sg_sondereintraege" FormField="sondereintrag_sondereintrag" WhereCondition="Like" />
+				<Parameter DbField="bezeichnung" DbJoinedTableName="sg_sondereintraege" DbTableAlias="sg_sondereintraege" FormField="sondereintrag_bezeichnung" WhereCondition="Like" />
+				
+				<Parameter DbField="bbz_bbb" DbJoinedTableName="ax_buchungsblatt" DbTableAlias="bblatt" FormField="BUCHUNG_FS_BUCHUNGSBLATTBEZIRK" />
+				<Parameter DbField="bbn" DbJoinedTableName="ax_buchungsblatt" DbTableAlias="bblatt" FormField="BUCHUNG_FS_BUCHUNGSBLATTNUMMERMITBUCH" WhereCondition="Like" />
+				<Parameter DbField="blt" DbJoinedTableName="ax_buchungsblatt" DbTableAlias="bblatt" FormField="bblatt_bart" />
+				
+			</Search>
+			
+			<SearchTemplate>SearchTemplates\TG_FLURSTUECK\TG_FLURSTUECK</SearchTemplate>
+		</SearchTemplate>
+
+		<!-- 
+		*
+		* InfoTemplate
+		*
+		-->
+		<InfoTemplate>
+			<Editable>false</Editable>
+			<Panels>
+				<!-- Allgemein, Flurstück - FLURSTUECK_F -->
+				<Panel>
+					<Caption>Allgemein</Caption>
+					<Authorisation>SG_FLURSTUECK_F</Authorisation>
+					<ShowDatacount>false</ShowDatacount>
+					<Query JsDataColumns = "fsk">
+						<Name>SG_FLURSTUECK_F</Name>
+						<AllowEmpty>false</AllowEmpty>
+						<AllowMaxResults>1</AllowMaxResults>
+
+						<Sql><![CDATA[
+								SELECT 
+									a.ID, a.ID_HASH, a.ISTGEBUCHT_HASH, a.ZDE,
+									a.FSK, a.FLSTALB, 
+									a.BEGINNT, 
+									a.ENDET,
+									a.FLN, a.FSN_ZAE, a.FSN_NEN,
+									a.GKZ_GEM, 
+									rel_gemeinde.bez as GEMEINDENAME, 
+									a.GMK_GMN, 
+									rel_gemarkung.bez as GEMARKUNGSNAME,
+									a.GKZ_KRS,
+									a.AFL as AMTLICHEFLAECHE,
+									st_area(ax.geometrie) as area,
+									rel_kreis.bez as GKZ_KRS_text,
+									a.convnr, a.convnr2
+									--,ax_dienststelle.bez as dienststellename
+								FROM	
+									{SCHEMA_NAME_PLACEHOLDER}alkisgeometrie_f ax
+									INNER JOIN {SCHEMA_NAME_PLACEHOLDER}ax_flurstueck a ON
+										a.id_hash = ax.id_hash
+									--{SCHEMA_NAME_PLACEHOLDER}sg_flurstueck_f a
+									LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_kreisregion rel_kreis ON 
+										rel_kreis.sll_lan = a.gkz_lan AND 
+										rel_kreis.sll_rbz = a.gkz_rbz AND 
+										rel_kreis.sll_krs = a.gkz_krs AND
+										rel_kreis.endet IS NULL
+									LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_gemeinde rel_gemeinde ON 
+										rel_gemeinde.gkz_lan = a.gkz_lan AND 
+										rel_gemeinde.gkz_rbz = a.gkz_rbz AND 
+										rel_gemeinde.gkz_krs = a.gkz_krs AND
+										rel_gemeinde.gkz_gem = a.gkz_gem AND
+										rel_gemeinde.endet IS NULL
+									LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_gemarkung rel_gemarkung ON 
+										rel_gemarkung.gmk_lan = a.gmk_lan AND 
+										rel_gemarkung.gmk_gmn = a.gmk_gmn AND
+										rel_gemarkung.endet IS NULL
+									/*
+									left join {SCHEMA_NAME_PLACEHOLDER}ax_dienststelle_schluessel on 
+										ax_dienststelle_schluessel.id_hash = a.id_hash and 
+										ax_dienststelle_schluessel.endet is null
+									left join {SCHEMA_NAME_PLACEHOLDER}ax_dienststelle on 
+										ax_dienststelle.sll_dst = ax_dienststelle_schluessel.dst and 
+										ax_dienststelle.sll_lan = ax_dienststelle_schluessel.lan and 
+										ax_dienststelle.endet is null
+									*/
+								WHERE 
+									a.ENDET IS NULL 
+									AND ax.gid = {SELECTED_MAP_ITEM}
+						]]></Sql>
+						<!--
+						<Sql><![CDATA[
+								SELECT 
+									a.ID, a.ID_HASH, a.ISTGEBUCHT_HASH, a.ZDE,
+									a.FSK, a.FLSTALB, a.BEGINNT, a.FLN, a.FSN_ZAE, a.FSN_NEN,
+									a.GKZ_GEM, 
+									a.GEMEINDENAME, 
+									a.GMK_GMN, 
+									a.GEMARKUNGSNAME,
+									a.GKZ_KRS,
+									a.AFL as AMTLICHEFLAECHE,
+									a.area,
+									rel_kreis.bez as GKZ_KRS_text
+								FROM	{SCHEMA_NAME_PLACEHOLDER}sg_flurstueck_f a
+									LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_kreisregion rel_kreis ON 
+										rel_kreis.sll_lan = a.gkz_lan AND 
+										rel_kreis.sll_rbz = a.gkz_rbz AND 
+										rel_kreis.sll_krs = a.gkz_krs
+									LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_gemeinde rel_gemeinde ON 
+										rel_gemeinde.gkz_lan = a.gkz_lan AND 
+										rel_gemeinde.gkz_rbz = a.gkz_rbz AND 
+										rel_gemeinde.gkz_krs = a.gkz_krs AND
+										rel_gemeinde.gkz_gem = a.gkz_gem
+									LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_gemarkung rel_gemarkung ON 
+										rel_gemarkung.gmk_lan = a.gmk_lan AND 
+										rel_gemarkung.gmk_gmn = a.gmk_gmn
+								WHERE 
+									a.objectid = {SELECTED_MAP_ITEM}
+						]]></Sql>
+						-->
+					</Query>
+
+					<!-- Stand -->
+					<Bindings>
+						<Sql><![CDATA[
+							SELECT to_char(stand, 'DD.MM.YYYY') as x_stand
+							FROM tg_stand
+							ORDER BY stand DESC
+							LIMIT 1
+						]]></Sql>
+						
+						<BindTo>data_gvStand</BindTo>
+						<HeaderText From="x_stand" To="Stand ALKIS-Daten (Abgabedatum)"/>
+					</Bindings>
+					
+					<!-- Dienststellen -->
+					<Bindings>
+						<Caption>Dienststellen</Caption>
+						<Sql><![CDATA[
+							SELECT
+								ax_dienststelle_schluessel.dst,
+								ax_dienststelle_schluessel.lan,
+								ax_dienststelle.bez as dienststellename
+							FROM ax_dienststelle_schluessel 
+								LEFT JOIN ax_dienststelle ON 
+									ax_dienststelle.sll_dst = ax_dienststelle_schluessel.dst and 
+									ax_dienststelle.sll_lan = ax_dienststelle_schluessel.lan and 
+									ax_dienststelle.endet is null
+							WHERE 
+								ax_dienststelle_schluessel.id_hash = '{id_hash}' 
+								AND ax_dienststelle_schluessel.endet is null
+							ORDER BY ax_dienststelle.bez
+						]]></Sql>
+						
+						<BindTo>data_gvDienststellen</BindTo>
+						<HeaderText From="dienststellename" To="Dienststelle"/>
+						<HeaderText From="dst" To=""/>
+					</Bindings>
+										
+					<!-- Anlass -->
+					<Bindings>
+						<Sql><![CDATA[
+							SELECT 
+								a.BEGINNT, a.ENDET,
+								concat(a.anl, concat(' - ' , codelist.anzeigetext)) as anlass
+							FROM {SCHEMA_NAME_PLACEHOLDER}r_anlass a 
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}codelist codelist ON codelist.name = a.ANL AND codelist.art = 'AA_Anlassart'
+							WHERE
+								a.id_hash = '{id_hash}' 
+								--AND a.convnr = {convnr} 
+								--AND a.convnr2 = {convnr2}
+								--AND a.ENDET is NULL
+							ORDER BY a.BEGINNT desc, a.ENDET desc
+						]]></Sql>
+						
+						<BindTo>data_gvAnlass</BindTo>
+						<HeaderText From="anlass" To="Anlass"/>
+						<HeaderText From="BEGINNT" To="Beginn"/>
+						<HeaderText From="ENDET" To="Ende"/>
+					</Bindings>
+					
+					<!-- Eigentümer -->
+					<Bindings>
+						<Sql><![CDATA[
+							SELECT 
+								distinct(bblatt.id),
+								bblatt.bbk,
+								-- ax_buchungsstelle:
+								c.anzeigetext AS bs_bart_text,
+								--mebs.ant_zae AS bs_miteig_ant_zae,
+								--mebs.ant_nen AS bs_miteig_ant_nen,
+								
+								-- ax_namensnummer:
+								--nnummer.ant_zae AS nnummer_ant_zae,
+								--nnummer.ant_nen AS nnummer_ant_nen,
+								r_eigentuemerart.anzeigetext AS nnummer_eigentuemerart_text,
+								
+								-- ax_person:
+								person.nof AS person_name,
+								person.vna AS person_vorname,
+								concat(r_anrede.anzeigetext, ' ', person.vna, ' ', person.nof) AS person_anrede_text,
+								r_anrede.anzeigetext AS person_anrede_text,
+								person.akd AS person_akad_grad
+							FROM v_sg_me_fs_bs mebs
+								LEFT JOIN codelist c 				ON c.name = mebs.bar AND c.art = 'AX_Buchungsart_Buchungsstelle'
+								LEFT JOIN ax_buchungsblatt bblatt 	ON bblatt.id_hash = mebs.best_von_hash AND bblatt.endet IS NULL
+								LEFT JOIN ax_namensnummer nnummer 	ON nnummer.bst_von_hash = bblatt.id_hash AND nnummer.endet IS NULL
+								LEFT JOIN ax_person person			ON person.id_hash = nnummer.benennt_hash AND person.endet IS NULL
+								
+								LEFT JOIN ax_buchungsblattbezirk	ON ax_buchungsblattbezirk.sll_bbb = bblatt.bbz_bbb AND ax_buchungsblattbezirk.zst_lan = bblatt.bbz_lan AND ax_buchungsblattbezirk.endet IS NULL 
+								LEFT JOIN CODELIST r_bblattart		ON r_bblattart.name = CAST(bblatt.blt AS VARCHAR) AND r_bblattart.ART = 'AX_Blattart_Buchungsblatt'
+
+								LEFT JOIN CODELIST r_eigentuemerart	ON r_eigentuemerart.NAME = CAST(nnummer.art AS VARCHAR) AND r_eigentuemerart.ART = 'AX_Eigentuemerart_Namensnummer'
+								
+								LEFT JOIN CODELIST r_anrede		ON r_anrede.NAME = CAST(person.anr AS VARCHAR) AND r_anrede.ART = 'AX_Anrede_Person'
+							WHERE 
+								mebs.id_hash_fs = '{id_hash}'
+								AND bblatt.blt != 5000
+								AND mebs.endet IS NULL
+							ORDER BY person.nof, person.vna
+						]]></Sql>
+						
+						<BindTo>data_gvEigentuemer</BindTo>
+						<Authorisation>ax_buchungsblatt</Authorisation>
+						<HeaderText From="bs_bart_text" To="Buchungsart"/>
+						<HeaderText From="nnummer_eigentuemerart_text" To="Eigentümerart"/>
+						<HeaderText From="person_anrede_text" To="Eigentümer"/>
+						<HeaderText From="bbk" To="Buchungsblatt"/>
+					</Bindings>
+
+					<!-- Vorgänger -->
+					<Bindings>
+						<Caption>Vorgänger</Caption>
+						
+						<Sql><![CDATA[
+							(
+							SELECT
+								DISTINCT(h.fsk),
+								h.gmk_gmn,
+								h.fln,
+								h.fsn_zae,
+								h.fsn_nen,
+								h.objectid
+							FROM {SCHEMA_NAME_PLACEHOLDER}r_nachfolgerfkz n
+								INNER JOIN {SCHEMA_NAME_PLACEHOLDER}sg_historischesflurstueck_f h ON h.id_hash = n.id_hash
+							WHERE n.nfk = '{fsk}'
+							
+							UNION
+							
+							SELECT
+								DISTINCT(h.fsk),
+								h.gmk_gmn,
+								h.fln,
+								h.fsn_zae,
+								h.fsn_nen,
+								-1 AS objectid
+							FROM {SCHEMA_NAME_PLACEHOLDER}r_nachfolgerfkz n
+								INNER JOIN {SCHEMA_NAME_PLACEHOLDER}ax_histflurstueckohneraumbezug h ON h.id_hash = n.id_hash
+							WHERE n.nfk = '{fsk}'
+							)
+							ORDER BY fsk
+						]]></Sql>
+						
+						<BindTo>data_gvVorgaenger</BindTo>
+						<HeaderText From="fsk" To="Flurstückskennzeichen"/>
+						<HeaderText From="fln" To="Flur"/>
+						<HeaderText From="fsn_zae" To="Zähler"/>
+						<HeaderText From="fsn_nen" To="Nenner"/>
+						<HeaderText From="objectid" To="objectid"/>
+						<!--
+						'sgDlgAction' : 'BY_KEY_VALUES', 
+									'needsSelection' : false, 
+									'dataModelConfig' : aNode.options.sagis,
+									'parameters' : { 'values' : feature.keys }
+								window.open('../FeatureInfo.aspx?SG_DLG_ACTION=BY_KEY_VALUES&CLASSNAME=sg_historischesflurstueck_f&FEATURESOURCE=' + SAGisCodeBehindOptions.MG_FEATURE_SOURCE + '&VALUES={objectid}', 'wnd');
+						-->
+						<JavaScriptClick>
+							<Column>fsk</Column>
+							<JsFn><![CDATA[
+								SAGis.OpenFeatureInfo({ sgDlgAction: 'BY_KEY_VALUES', windowName : 'sg_historischesflurstueck_f', parameters : { CLASSNAME : 'sg_historischesflurstueck_f', FEATURESOURCE : SAGisCodeBehindOptions.MG_FEATURE_SOURCE, VALUES : %objectid% }});
+							]]></JsFn>
+						 </JavaScriptClick>
+					</Bindings>
+					
+					<!-- Buchgrundstück -->
+					<Bindings>
+						<Active>false</Active>
+						<Caption>Buchgrundstück</Caption>
+
+						<Sql><![CDATA[
+							SELECT
+								distinct(mebs2.id_hash_fs),
+								fs.fsk, fs.gid
+							FROM {SCHEMA_NAME_PLACEHOLDER}v_sg_me_fs_bs mebs1
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}v_sg_me_fs_bs mebs2 ON mebs2.id_hash_bs = mebs1.id_hash_bs
+								--LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_flurstueck fs on fs.id_hash = mebs2.id_hash_fs
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}alkisgeometrie_f fs on fs.id_hash = mebs2.id_hash_fs
+							WHERE 
+								mebs1.id_hash_fs = '{id_hash}'
+								AND mebs1.endet IS NULL
+								AND fs.endet IS NULL
+							ORDER BY fs.fsk
+							]]></Sql>
+						<BindTo>data_gvBuchgrundstueck</BindTo>
+						<HeaderText From="fsk" To="Flurstückskennzeichen"/>
+						<HeaderText From="gid" To="gid"/>
+						<JavaScriptClick>
+							<Column>fsk</Column>
+							<JsFn><![CDATA[
+								zoomToFilter({layerName : SAGisCodeBehindOptions.MG_LAYER_NAME, filter : SAGisCodeBehindOptions.KEYNAME + ' = %gid%', doZoom : true}); return false;
+							]]></JsFn>
+						 </JavaScriptClick>
+						
+					</Bindings>
+					
+					<!-- Nutzung -->
+					<Bindings>
+						<Caption>Nutzung</Caption>
+						<Sql><![CDATA[
+							SELECT 
+								tg_objektart.name AS objektart_name,
+								alkisgeometrie_f.fkt, 
+								alkisgeometrie_f.tn_key_desc,
+								alkisgeometrie_f.fkt_val,
+								a.kennung,
+								a.afl,
+								a.gfl,
+								a.sfl,
+								a.rfl,
+								a.ken_tn,
+								a.art_tn,
+								
+								round( CAST((100*a.sfl/a.afl) as numeric), 0) as anteil,
+								alkisgeometrie_f.gid
+								--a.gid
+							FROM 	tg_nutzung a
+								LEFT JOIN tg_objektarten tg_objektart ON tg_objektart.objektart = a.art_tn
+								INNER JOIN alkisgeometrie_f ON 
+									alkisgeometrie_f.id_hash = a.id_tn_hash AND 
+									alkisgeometrie_f.endet is null
+							WHERE 	a.fsk = '{FSK}' 
+									AND a.endet IS NULL 
+									AND a.sfl > 0.99
+							ORDER BY anteil desc, a.ken_tn
+						]]></Sql>
+						<BindTo>data_gvNutzung</BindTo>
+						<HeaderText From="objektart_name" To="Nutzungsart"/>
+						<HeaderText From="tn_key_desc" To="Unterart"/>
+						
+						<HeaderText From="fkt_val" To="Funktion"/>
+						<!--<HeaderText From="afl" To="Amtliche Fläche (FS)"/>-->
+						<!--<HeaderText From="gfl" To="Geometrische Fläche (FS)"/>-->
+						<HeaderText From="sfl" To="Schnittfläche [m²]"/>
+						<HeaderText From="anteil" To="Anteil in %"/>
+						<!--<HeaderText From="rfl" To="rfl"/>-->
+						
+						<JavaScriptClick>
+							<Column>objektart_name</Column>
+							<JsFn><![CDATA[
+								zoomToFilter({layerName : 'sg_nutzung_f', filter : 'objectid = %gid%', doZoom : false}); return false;
+								/*zoomToFilter({layerName : 'tg_nutzung', filter : 'gid = %gid%', doZoom : false}); return false;*/
+							]]></JsFn>
+						 </JavaScriptClick>
+					</Bindings>
+					
+					<!-- Bodenschätzung -->
+					<Bindings>
+						<Caption>Bodenschätzung</Caption>
+						<Sql><![CDATA[
+							select 
+								c.gid,
+								c.id_hash,
+								c.kul_val,
+								kn1_val,
+								kn2_val
+							from {SCHEMA_NAME_PLACEHOLDER}tg_bodenschaetzung a
+							inner join {SCHEMA_NAME_PLACEHOLDER}ax_bodenschaetzung c on c.id_hash = a.id_bs_hash and c.endet is null
+							where 
+								a.fsk = '{fsk}'
+								and a.endet is null
+						]]></Sql>
+						<BindTo>data_gvBodenschaetzung</BindTo>
+						<HeaderText From="kul_val" To="Kulturart"/>
+						<HeaderText From="kn1_val" To="Bodenart"/>
+						<HeaderText From="kn2_val" To="Bodenstufe"/>
+						<JavaScriptClick>
+							<Column>kul_val</Column>
+							<JsFn><![CDATA[
+								zoomToFilter({layerName : 'sg_bodenschaetzung_f', filter : 'objectid = %gid%', doZoom : false}); return false;
+							]]></JsFn>
+						 </JavaScriptClick>
+					</Bindings>
+					
+					<!-- Lage -->
+					<Bindings>
+						<Caption>Lage</Caption>
+						<Sql><![CDATA[
+							SELECT 
+								kreis_region,
+								gemeinde,
+								strasse,
+								hausnummer,
+								strasse || CASE WHEN hausnummer IS NULL THEN '' ELSE ' ' || hausnummer END str_mit_hnr
+								
+							FROM 	{SCHEMA_NAME_PLACEHOLDER}v_sg_me_fs_lagebezeichnung
+							WHERE 	id_hash_fs = '{id_hash}'
+							ORDER BY kreis_region, gemeinde, strasse, hausnummer
+						]]></Sql>
+						
+						<BindTo>data_gvLagebezeichnung</BindTo>
+						<HeaderText From="kreis_region" To="Kreis / Region"/>
+						<HeaderText From="gemeinde" To="Gemeinde"/>
+						<HeaderText From="str_mit_hnr" To="Strasse"/>
+					</Bindings>
+					
+					<!-- Dienstbarkeiten -->
+					<Bindings>
+						<Caption>Dienstbarkeiten</Caption>
+						<Sql><![CDATA[
+							SELECT 
+								--a.id as gid,
+								--a.fsk,
+								--a.bezeichnung,
+								--b.bedeutung
+								
+								count(1) as num
+							FROM sg_dienstbarkeiten a 
+								--LEFT JOIN sg_dienstbarkeiten_d03_domain b on b.fk_id = a.r_art
+							WHERE a.fsk = '{fsk}'
+							--ORDER BY a.bezeichnung
+						]]></Sql>
+						<BindTo>data_gvDienstbarkeiten</BindTo>
+						<!--
+						<HeaderText From="bezeichnung" To="Bezeichnung"/>
+						<HeaderText From="bedeutung" To="Objekt"/>
+						-->
+						<HeaderText From="num" To="Anzahl"/>
+						<JavaScriptClick>
+							<!--<Column>bezeichnung</Column>-->
+							<Column>num</Column>
+							<JsFn><![CDATA[
+								openReferenceWindow
+								(
+								  {
+									sender : this, 
+									count : '1', 
+									parentId : SAGisDataItems.SG_FLURSTUECK_F.fsk[0], 
+									definition : 
+									{
+									  'DETAILFIELDNAME' : 'fsk',
+									  'DETAILFILTER' : '',
+									  'DETAILLIST' : '',
+									  'DETAILORDERBY' : '',
+									  'DETAILTABLE' : 'sg_dienstbarkeiten'
+									}
+								  }
+								);
+								return false;
+							]]></JsFn>
+						 </JavaScriptClick>
+					</Bindings>
+					
+					<ItemTemplate>ItemTemplates\TG_FLURSTUECK\TG_FLURSTUECK</ItemTemplate>
+				</Panel>
+
+				<!-- Buchungsstellen/-blätter -->
+				<Panel>
+					<Caption>Buchungsstellen/-blätter</Caption>
+					<Authorisation>ax_buchungsblatt</Authorisation>
+					<Query>
+						<Name>AX_BUCHUNGSSTELLE</Name>
+						<Parent>SG_FLURSTUECK_F</Parent>
+						<Sql><![CDATA[
+							SELECT 
+								distinct(mebs.best_von_hash),
+								mebs.*,
+								c.anzeigetext as bs_bart_text,
+								c.name as bs_bart,
+								
+								bblatt.bbk
+							FROM {SCHEMA_NAME_PLACEHOLDER}v_sg_me_fs_bs mebs
+								LEFT JOIN ax_buchungsblatt bblatt ON bblatt.id_hash = mebs.best_von_hash
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}codelist c ON c.name = mebs.bar AND c.art = 'AX_Buchungsart_Buchungsstelle'
+							WHERE 
+								mebs.id_hash_fs = '{id_hash}' 
+								AND mebs.endet is NULL
+							ORDER BY bblatt.bbk, mebs.lnr, mebs.beginnt
+							--, mebs.endet
+						]]></Sql>
+					</Query>
+
+					<Bindings>
+						<Sql><![CDATA[
+							SELECT 
+								concat(a.anl, concat(' - ' , codelist.anzeigetext)) as anlass
+							FROM {SCHEMA_NAME_PLACEHOLDER}r_anlass a 
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}codelist codelist ON codelist.name = a.ANL AND codelist.art = 'AA_Anlassart'
+							WHERE
+								a.id_hash = '{id_hash_bs}' AND 
+								a.ENDET is NULL
+							ORDER BY a.BEGINNT asc
+						]]></Sql>
+						<BindTo>data_gvAnlass</BindTo>
+						<HeaderText From="anlass" To="Anlass"/>
+					</Bindings>
+
+					<Bindings>
+						<Sql><![CDATA[
+							SELECT 
+								bblatt.bbk,
+								concat(bblatt.bbz_bbb, '/', AX_BUCHUNGSBLATTBEZIRK.BEZ) as bbz_bbb_val_text,
+								bblatt.bbn,
+								
+								r_bblatt_art.anzeigetext as bblatt_art_text,
+								concat(bblatt.blt, '/', r_bblatt_art.anzeigetext) as blt_val_text
+							FROM {SCHEMA_NAME_PLACEHOLDER}ax_buchungsblatt bblatt 
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}CODELIST r_bblatt_art 	ON r_bblatt_art.NAME = CAST(bblatt.BLT AS VARCHAR) AND r_bblatt_art.ART = 'AX_Blattart_Buchungsblatt'
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}AX_BUCHUNGSBLATTBEZIRK	ON AX_BUCHUNGSBLATTBEZIRK.SLL_BBB = bblatt.BBZ_BBB AND AX_BUCHUNGSBLATTBEZIRK.ZST_LAN = bblatt.BBZ_LAN AND AX_BUCHUNGSBLATTBEZIRK.ENDET is null 
+							WHERE 
+								bblatt.id_hash = '{best_von_hash}'
+								AND bblatt.endet IS NULL
+					]]></Sql>
+						<BindTo>data_gvBuchungsblaetter</BindTo>
+						<HeaderText From="bbk" To="Buchungsblatt"/>
+						<HeaderText From="bbn" To="Buchungsblattnummer"/>
+						<HeaderText From="bbz_bbb_val_text" To="Buchungsblattbezirk"/>
+						<HeaderText From="blt_val_text" To="Blattart"/>
+					</Bindings>
+
+					<ItemTemplate>ItemTemplates\TG_FLURSTUECK\TG_FLURSTUECK_BUCHUNGSSTELLE</ItemTemplate>
+					
+				</Panel>	
+				
+				<!-- Eigentümer nach Buchungsblättern -->
+				<Panel>
+					<Caption>Eigentümer</Caption>
+					<Authorisation>ax_buchungsblatt</Authorisation>
+					<Active>true</Active>
+					<Query>
+						<Name>EIGENTUEMER</Name>
+						<Parent>SG_FLURSTUECK_F</Parent>
+						
+						<Sql><![CDATA[
+							SELECT 
+								distinct(bblatt.id),
+								
+								-- ax_buchungsstelle:
+								c.name AS bs_bart,
+								c.anzeigetext AS bs_bart_text,
+								
+								mebs.lnr AS bs_lnr,
+								mebs.ant_zae AS bs_miteig_ant_zae,
+								mebs.ant_nen AS bs_miteig_ant_nen,
+								
+								-- ax_namensnummer:
+								nnummer.lnr AS nnummer_lnr,
+								nnummer.art AS nnummer_eigentuemerart,
+								nnummer.ant_zae AS nnummer_ant_zae,
+								nnummer.ant_nen AS nnummer_ant_nen,
+								r_eigentuemerart.anzeigetext AS nnummer_eigentuemerart_text,
+								
+								-- ax_buchungsblatt:
+								bblatt.bbk AS bblatt_kennz,
+								bblatt.bbz_bbb AS bblatt_bezirk,
+								bblatt.bbn AS bblatt_nummer,
+								ax_buchungsblattbezirk.bez AS bblatt_bezirk_text,
+								bblatt.blt AS bblatt_bart,
+								r_bblattart.anzeigetext AS bblarr_bart_text,
+									
+								-- ax_person:
+								person.id_hash AS id_hash_person,
+								person.nof AS person_name,
+								person.vna AS person_vorname,
+								person.anr AS person_anrede,
+								--concat(r_anrede.name, "/", r_anrede.anzeigetext) AS person_anrede_text,
+								r_anrede.anzeigetext AS person_anrede_text,
+								person.akd AS person_akad_grad,
+								person.geb AS person_geburtsdatum,
+								person.gna AS person_geburtsname
+
+								
+							FROM {SCHEMA_NAME_PLACEHOLDER}v_sg_me_fs_bs mebs
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}codelist c 				ON c.name = mebs.bar AND c.art = 'AX_Buchungsart_Buchungsstelle'
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_buchungsblatt bblatt 	ON bblatt.id_hash = mebs.best_von_hash AND bblatt.endet IS NULL
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_namensnummer nnummer 	ON nnummer.bst_von_hash = bblatt.id_hash AND nnummer.endet IS NULL
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_person person			ON person.id_hash = nnummer.benennt_hash AND person.endet IS NULL
+								
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_buchungsblattbezirk	ON ax_buchungsblattbezirk.sll_bbb = bblatt.bbz_bbb AND ax_buchungsblattbezirk.zst_lan = bblatt.bbz_lan AND ax_buchungsblattbezirk.endet IS NULL 
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}CODELIST r_bblattart		ON r_bblattart.name = CAST(bblatt.blt AS VARCHAR) AND r_bblattart.ART = 'AX_Blattart_Buchungsblatt'
+
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}CODELIST r_eigentuemerart	ON r_eigentuemerart.NAME = CAST(nnummer.art AS VARCHAR) AND r_eigentuemerart.ART = 'AX_Eigentuemerart_Namensnummer'
+								
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}CODELIST r_anrede		ON r_anrede.NAME = CAST(person.anr AS VARCHAR) AND r_anrede.ART = 'AX_Anrede_Person'
+							WHERE 
+								mebs.id_hash_fs = '{id_hash}'
+								AND bblatt.blt != 5000
+								AND mebs.endet IS NULL
+							ORDER BY bblatt_kennz, nnummer.lnr
+						]]></Sql>
+						
+					</Query>
+
+					<Bindings>
+						<Sql><![CDATA[
+							SELECT 
+								anschrift.plz AS plz,
+								anschrift.orp AS wohnort,
+								anschrift.ott AS ortsteil,
+								concat(
+									anschrift.orp, 
+									(CASE WHEN anschrift.ott IS NULL THEN '' ELSE concat(' (', anschrift.ott, ')') END)
+								) AS ort_ortsteil,
+								anschrift.str AS strasse,
+								anschrift.hsn AS hnr,
+								anschrift.hsnr_z AS hnr_zusatz,
+								concat(anschrift.hsn, (CASE WHEN anschrift.hsnr_z IS NULL THEN '' ELSE ' ' END), anschrift.hsnr_z) AS hnr_mit_zusatz,
+								r_qualitaet.pro_name,
+								r_qualitaet.des_anschrift,
+								concat(r_qualitaet.pro_name, ' / ', r_qualitaet.des_anschrift) AS qualitaet_text
+							FROM {SCHEMA_NAME_PLACEHOLDER}r_hat r_hat
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_anschrift anschrift ON anschrift.id_hash = r_hat.rel_hash AND anschrift.endet IS NULL
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}r_qualitaetsangaben r_qualitaet ON r_qualitaet.id_hash = anschrift.id_hash AND r_qualitaet.endet is NULL
+							WHERE 
+								r_hat.id_hash = '{id_hash_person}'
+								AND r_hat.endet IS NULL
+							ORDER BY anschrift.orp , anschrift.str , anschrift.hsn 
+						]]></Sql>
+						
+						<BindTo>dataANSCHRIFT_PERSON</BindTo>
+						<HeaderText From="plz" To="PLZ"/>
+						<HeaderText From="ort_ortsteil" To="Ort (Ortsteil)"/>
+						<HeaderText From="strasse" To="Strasse"/>
+						<HeaderText From="hnr_mit_zusatz" To="Nr"/>
+						<HeaderText From="POSTLEITZAHLPOSTFACH" To="PLZ Postfach"/>
+						<HeaderText From="POSTFACH" To="Postfach"/>
+						<HeaderText From="qualitaet_text" To="Qualitätsangaben"/>
+					</Bindings>
+
+					<ItemTemplate>ItemTemplates\TG_FLURSTUECK\TG_FLURSTUECK_EIGENTUEMER</ItemTemplate>
+					<!--
+					
+					<NoItemTemplate>
+						<ColumnNameTranslation From="LAUFENDENUMMERNACHDIN1421" To="Lfd. Nummer nach DIN1421"/>
+					</NoItemTemplate>
+					-->
+				</Panel>		
+
+				<!-- Buchgrundstück -->
+				<!--
+				<Panel>
+					<Caption>Buchgrundstück</Caption>
+					<Authorisation>ax_buchungsblatt</Authorisation>
+					<Active>false</Active>
+					<Query JsDataColumns = "gid">
+						<Name>XXAX_BUCHGRUNDSTUECKXX</Name>
+						<Parent>SG_FLURSTUECK_F</Parent>
+						/*
+						<Sql><![CDATA[
+							SELECT
+								distinct(mebs2.id_hash_fs),
+								fs.gid,
+								fs.fsk,
+								fs.FLN, fs.FSN_ZAE, fs.FSN_NEN,
+								fs.GKZ_GEM, 
+								rel_gemeinde.bez as GEMEINDENAME, 
+								fs.GMK_GMN, 
+								rel_gemarkung.bez as GEMARKUNGSNAME,
+								fs.GKZ_KRS,
+								rel_kreis.bez as GKZ_KRS_text
+								xx,bblatt.bbk, concat(bblatt.bbz_bbb, '/', AX_BUCHUNGSBLATTBEZIRK.BEZ) as bbz_bbb_val_text, bblatt.bbn,
+								
+							FROM {SCHEMA_NAME_PLACEHOLDER}v_sg_me_fs_bs mebs1
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}v_sg_me_fs_bs mebs2 ON mebs2.id_hash_bs = mebs1.id_hash_bs
+								xxLEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_flurstueck fs on fs.id_hash = mebs2.id_hash_fs
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}alkisgeometrie_f fs on fs.id_hash = mebs2.id_hash_fs
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_kreisregion rel_kreis ON 
+										rel_kreis.sll_lan = fs.gkz_lan AND 
+										rel_kreis.sll_rbz = fs.gkz_rbz AND 
+										rel_kreis.sll_krs = fs.gkz_krs
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_gemeinde rel_gemeinde ON 
+									rel_gemeinde.gkz_lan = fs.gkz_lan AND 
+									rel_gemeinde.gkz_rbz = fs.gkz_rbz AND 
+									rel_gemeinde.gkz_krs = fs.gkz_krs AND
+									rel_gemeinde.gkz_gem = fs.gkz_gem
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}ax_gemarkung rel_gemarkung ON 
+									rel_gemarkung.gmk_lan = fs.gmk_lan AND 
+									rel_gemarkung.gmk_gmn = fs.gmk_gmn
+								xxLEFT JOIN ax_buchungsblatt bblatt ON bblatt.id_hash = '{best_von_hash}'
+							WHERE 
+								mebs1.id_hash_fs = '{id_hash}'
+								AND mebs1.endet IS NULL
+								AND fs.endet IS NULL
+							ORDER BY fs.fsk
+						]]></Sql>
+						*/
+						<Sql><![CDATA[
+							SELECT 
+								distinct(mebs2.id_hash_fs),
+								fs.gid,
+								fs.fsk,
+								fs.FLN, fs.FSN_ZAE, fs.FSN_NEN,
+								fs.GKZ_GEM, 
+								rel_gemeinde.bez as GEMEINDENAME, 
+								fs.GMK_GMN, 
+								rel_gemarkung.bez as GEMARKUNGSNAME,
+								fs.GKZ_KRS,
+								rel_kreis.bez as GKZ_KRS_text
+							FROM v_sg_me_fs_bs mebs
+								LEFT JOIN v_sg_me_fs_bs mebs2 ON mebs2.best_von_hash = mebs.best_von_hash AND mebs2.endet IS NULL
+								LEFT JOIN ax_buchungsblatt bblatt ON 
+									bblatt.id_hash = mebs.best_von_hash AND 
+									bblatt.endet IS NULL AND 
+									bblatt.blt != 5000
+								LEFT JOIN alkisgeometrie_f fs on fs.id_hash = mebs2.id_hash_fs AND fs.endet IS NULL
+								
+								LEFT JOIN ax_kreisregion rel_kreis ON 
+										rel_kreis.sll_lan = fs.gkz_lan AND 
+										rel_kreis.sll_rbz = fs.gkz_rbz AND 
+										rel_kreis.sll_krs = fs.gkz_krs
+								LEFT JOIN ax_gemeinde rel_gemeinde ON 
+									rel_gemeinde.gkz_lan = fs.gkz_lan AND 
+									rel_gemeinde.gkz_rbz = fs.gkz_rbz AND 
+									rel_gemeinde.gkz_krs = fs.gkz_krs AND
+									rel_gemeinde.gkz_gem = fs.gkz_gem
+								LEFT JOIN ax_gemarkung rel_gemarkung ON 
+									rel_gemarkung.gmk_lan = fs.gmk_lan AND 
+									rel_gemarkung.gmk_gmn = fs.gmk_gmn
+							WHERE 
+								mebs.id_hash_fs = '{id_hash}'
+								AND mebs.endet IS NULL
+								AND fs.endet IS NULL
+						]]></Sql>
+					</Query>
+						 
+					<ItemTemplate>ItemTemplates\TG_FLURSTUECK\TG_BUCHGRUNDSTUECK</ItemTemplate>
+					<FooterTemplate>FooterTemplates\TG_FLURSTUECK\TG_BUCHGRUNDSTUECK</FooterTemplate>
+				</Panel>	
+				-->
+				
+				
+				
+				<Panel>
+					<Caption>Buchgrundstück</Caption>
+					<Active>true</Active>
+					<Query JsDataColumns = "gid">
+						<Name>AX_BUCHGRUNDSTUECK</Name>
+						<Parent>SG_FLURSTUECK_F</Parent>
+						<!--
+						<Sql><![CDATA[
+							SELECT 
+								c.objectid as gid,
+								b.fsk,
+								c.afl
+							FROM sg_grundstueck_fs a
+								left join sg_grundstueck_fs b on b.r_fk_grundstueck = a.r_fk_grundstueck
+								left join sg_flurstueck_f c on c.fsk = b.fsk
+							WHERE a.fsk = '{fsk}'
+							ORDER BY c.afl, b.fsk
+								
+						]]></Sql>
+						-->
+						<!-- Grafische Bildung (sg_grundstueck_fs) muss hier nicht erfolgt sein: -->
+						<Sql><![CDATA[
+						SELECT 
+							distinct(mebs2.id_hash_fs) as id_hash
+							,fs.afl
+							,fs.fsk
+							,fs.objectid as gid
+						FROM v_sg_me_fs_bs mebs
+							LEFT JOIN v_sg_me_fs_bs mebs2 ON 
+								mebs2.best_von_hash = mebs.best_von_hash 
+								AND mebs2.endet IS NULL
+								AND mebs2.bar in ('1100', '1101', '1102')
+							JOIN ax_buchungsblatt bblatt ON 
+								bblatt.id_hash = mebs.best_von_hash 
+								AND bblatt.endet IS NULL 
+							LEFT JOIN sg_flurstueck_f fs ON fs.id_hash = mebs2.id_hash_fs 
+						WHERE 
+							mebs.id_hash_fs = '{id_hash}'
+							AND mebs.endet IS NULL
+							AND mebs.bar in ('1100', '1101', '1102')
+						]]></Sql>
+					</Query>
+						 
+					<ItemTemplate>ItemTemplates\TG_FLURSTUECK\TG_BUCHGRUNDSTUECK</ItemTemplate>
+					<FooterTemplate>FooterTemplates\TG_FLURSTUECK\TG_BUCHGRUNDSTUECK</FooterTemplate>
+				</Panel>
+				
+				
+				
+				
+				<!-- SDO_RELATE_AX_GEBAEUDE - SDO_RELATE_AX_GEBAEUDE -->
+				<Panel>
+					<Caption>Gebäude</Caption>
+					<Authorisation>sg_gebaeude_f</Authorisation>
+					<Active>false</Active>
+					<HideIfQueryIsEmpty>true</HideIfQueryIsEmpty>
+					<Query>
+						<Name>SDO_RELATE_AX_GEBAEUDE</Name>
+						<Parent>SG_FLURSTUECK_F</Parent>
+						<Intersection>
+							<TargetFeatureClass>SG_GEBAEUDE_F</TargetFeatureClass>
+							<OrderBy>X_AREA_INTERSECTION ASC</OrderBy>
+							<Filter>X_AREA_INTERSECTION >= 0.1</Filter>
+					
+							<!-- Intersects = 4 -->
+							<MgFeatureSpatialOperation>4</MgFeatureSpatialOperation>
+							<Property>id_hash</Property>
+							<Property>daf</Property>
+							<Property>gfk_val</Property>
+							<Property>hho</Property>
+							<Property>objectid</Property>
+							<Property>gkn</Property>
+							<Property>area</Property>
+					
+							
+							<Translation>
+								<Sql><![CDATA[SELECT name, anzeigetext FROM {SCHEMA_NAME_PLACEHOLDER}codelist WHERE art = 'AX_Dachform' ]]></Sql>
+								<FromColumn>daf</FromColumn>
+								<ValueColumn>anzeigetext</ValueColumn>
+								<IdColumn>name</IdColumn>
+							</Translation>
+
+						</Intersection>
+						
+						<ShowInMap>
+							<LayerFeatureClassName>SG_GEBAEUDE_F</LayerFeatureClassName>
+							<BindTo>lnkBtnShowInMap</BindTo>
+						</ShowInMap>
+					</Query>
+					<!--
+					<NoItemTemplate>
+						<ColumnNameTranslation From="" To="Lfd. Nummer nach DIN1421"/>
+					</NoItemTemplate>
+					-->
+					
+					
+					<Bindings>
+						<Sql><![CDATA[
+							SELECT 
+								kreis_region,
+								gemeinde,
+								strasse,
+								hausnummer,
+								strasse || CASE WHEN hausnummer IS NULL THEN '' ELSE ' ' || hausnummer END str_mit_hnr
+								
+							FROM 	{SCHEMA_NAME_PLACEHOLDER}v_sg_me_geb_lagebezeichnung
+							WHERE 	id_hash = '{id_hash}'
+							ORDER BY kreis_region, gemeinde, strasse, hausnummer
+					]]></Sql>
+						<BindTo>data_gvLagebezeichnung</BindTo>
+						<HeaderText From="kreis_region" To="Kreis / Region"/>
+						<HeaderText From="gemeinde" To="Gemeinde"/>
+						<HeaderText From="str_mit_hnr" To="Strasse"/>
+					</Bindings>
+					
+					<ItemTemplate>ItemTemplates\TG_FLURSTUECK\TG_FLURSTUECK_GEBAEUDE</ItemTemplate>
+				</Panel>				
+			
+				<!-- Sondereinträge -->
+				<Panel>
+					<Caption>Sondereinträge</Caption>
+					<Authorisation>sg_sondereintraege</Authorisation>
+					<Active>false</Active>
+					<Query >
+						<Name>sg_sondereintraege</Name>
+						<Parent>SG_FLURSTUECK_F</Parent>
+						<Sql><![CDATA[
+							SELECT
+								a.gid,
+								a.area,
+								a.flurstkennz_alt,
+								a.flurstueckskennzeichen,
+								a.sondereintrag,
+								a.sg_insrtuser,
+								a.sg_insrtdat,
+								a.sg_updtuser,
+								a.sg_updtdat,
+								a.r_typ,
+								a.aktiv,
+								a.aktiv_ab,
+								a.aktiv_bis,
+								a.bezeichnung,
+								b.bedeutung as TYP_TBD_VALUE
+							FROM {SCHEMA_NAME_PLACEHOLDER}sg_sondereintraege a
+								LEFT JOIN {SCHEMA_NAME_PLACEHOLDER}sg_sondereintraege_domain b ON b.fk_id = a.r_typ
+							WHERE 
+								a.flurstueckskennzeichen = '{fsk}'
+							ORDER BY a.sg_insrtdat desc
+						]]></Sql>
+
+					</Query>
+
+					<ItemTemplate>ItemTemplates\TG_FLURSTUECK\SG_SONDEREINTRAEGE</ItemTemplate>
+					<FooterTemplate>FooterTemplates\TG_FLURSTUECK\SG_SONDEREINTRAEGE</FooterTemplate>
+				</Panel>
+				
+				<!-- Dienstbarkeiten -->
+				<Panel>
+					<Caption>Dienstbarkeiten</Caption>
+					<Authorisation>sg_dienstbarkeiten</Authorisation>
+					<Active>false</Active>
+					<Query >
+						<Name>sg_dienstbarkeiten</Name>
+						<Parent>SG_FLURSTUECK_F</Parent>
+						<Sql><![CDATA[
+							SELECT
+								a.*,
+								b.bedeutung as status_value
+							FROM sg_dienstbarkeiten a
+								LEFT JOIN sg_dienstbarkeiten_d01_domain b ON b.fk_id = a.r_status
+							WHERE 
+								a.fsk = '{fsk}'
+							ORDER BY a.insrtdat desc
+						]]></Sql>
+
+					</Query>
+
+					<ItemTemplate>ItemTemplates\TG_FLURSTUECK\SG_DIENSTBARKEITEN</ItemTemplate>
+					<FooterTemplate>FooterTemplates\TG_FLURSTUECK\SG_DIENSTBARKEITEN</FooterTemplate>
+				</Panel>	
+			</Panels>
+		</InfoTemplate>
+	</Container>
+
+</SAGisGnDlgConfig>

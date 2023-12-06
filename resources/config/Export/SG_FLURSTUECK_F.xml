@@ -1,0 +1,337 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+
+<SAGisExcelExportDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:noNamespaceSchemaLocation="SAGisExcelExportDefinition.xsd">
+	<SAGisExcelExportItem>
+		<FeatureClass>SG_FLURSTUECK_F</FeatureClass>
+		<Title>ALKIS Flurstücke</Title>
+		<FileName>Flurstueck</FileName>
+		<ProviderTypeRestrictions>
+			<Type>OSGeo.PostgreSQL</Type>
+		</ProviderTypeRestrictions>
+
+		<WorkSheet>
+			<AccessRight>SG_FLURSTUECK_F</AccessRight>
+			<TabColor>red</TabColor>
+			<WorkSheetName>Flurstücke</WorkSheetName>
+			<ColumnHeaderAliases>
+				<Alias ColumnName="ID" Title="ALKIS-Id">ALKIS-Id</Alias>
+				
+				<Alias ColumnName="FSK" Title="Flurstückskennzeichen"/>
+				<Alias ColumnName="FLSTALB" Title="ALB">ALB-Kennzeichen</Alias>
+				<Alias ColumnName="GKZ_GEM" Title="Gemeindekennzeichen"></Alias>
+				<Alias ColumnName="GEMEINDENAME" Title="Gemeinde"></Alias>
+				
+				<Alias ColumnName="GMK_GMN" Title="Gemarkungskennzeichen"></Alias>
+				<Alias ColumnName="GEMARKUNGSNAME" Title="Gemarkung"></Alias>
+				
+				<Alias ColumnName="GKZ_KRS" Title="Kreiskennzeichen"></Alias>
+				<Alias ColumnName="GKZ_KRS_text" Title="Kreis"></Alias>
+				
+				<Alias ColumnName="FLN" Title="Flur"></Alias>
+				<Alias ColumnName="FSN_ZAE" Title="Zähler"></Alias>
+				<Alias ColumnName="FSN_NEN" Title="Nenner"></Alias>
+
+				<Alias ColumnName="AREA" Title="Fläche">Fläche des Flurstücks in der Karte</Alias>
+				<Alias ColumnName="AMTLICHEFLAECHE" Title="Fläche (amtlich)">Im Grundbuchamt geführte Fläche</Alias>
+				
+				<Alias ColumnName="AREA_BEBAUTE_FLAECHE" Title="Bebaute Fläche">Bebaute Fläche</Alias>
+			</ColumnHeaderAliases>
+			<Sql ><![CDATA[
+				SELECT 
+					a.ID,
+					a.FSK, 
+					a.FLSTALB, 
+					
+					a.GKZ_KRS,
+					rel_kreis.bez as GKZ_KRS_text,
+					
+					a.GKZ_GEM, 
+					rel_gemeinde.bez as GEMEINDENAME, 
+
+					a.GMK_GMN, 
+					rel_gemarkung.bez as GEMARKUNGSNAME,
+					
+					a.FLN, 
+					a.FSN_ZAE, 
+					a.FSN_NEN,
+
+					
+					a.AFL as AMTLICHEFLAECHE,
+					st_area(ax.geometrie) as area,
+					
+					(
+					SELECT round(sum(ST_Area(ST_Intersection(a.shape, b.shape))::numeric), 3)
+					FROM sg_flurstueck_f a, sg_gebaeude_f b
+					WHERE a.objectid = ax.gid AND ST_Intersects(a.shape, b.shape) = TRUE
+					) as area_bebaute_flaeche
+				FROM	
+					alkisgeometrie_f ax
+					INNER JOIN ax_flurstueck a ON
+						a.id_hash = ax.id_hash
+					LEFT JOIN ax_kreisregion rel_kreis ON 
+						rel_kreis.sll_lan = a.gkz_lan AND 
+						rel_kreis.sll_rbz = a.gkz_rbz AND 
+						rel_kreis.sll_krs = a.gkz_krs AND
+						rel_kreis.endet IS NULL
+					LEFT JOIN ax_gemeinde rel_gemeinde ON 
+						rel_gemeinde.gkz_lan = a.gkz_lan AND 
+						rel_gemeinde.gkz_rbz = a.gkz_rbz AND 
+						rel_gemeinde.gkz_krs = a.gkz_krs AND
+						rel_gemeinde.gkz_gem = a.gkz_gem AND
+						rel_gemeinde.endet IS NULL
+					LEFT JOIN ax_gemarkung rel_gemarkung ON 
+						rel_gemarkung.gmk_lan = a.gmk_lan AND 
+						rel_gemarkung.gmk_gmn = a.gmk_gmn AND
+						rel_gemarkung.endet IS NULL
+				WHERE 
+					a.ENDET IS NULL 
+					AND ax.gid = {0}
+			]]></Sql>
+		</WorkSheet>
+		
+		<WorkSheet>
+			<AccessRight>ax_buchungsblatt</AccessRight>
+			<TabColor>green</TabColor>
+			<WorkSheetName>Eigentümer</WorkSheetName>
+			<ColumnHeaderAliases>
+				<Alias ColumnName="ID" Title="ALKIS-Id">ALKIS-Id</Alias>
+				<Alias ColumnName="fsk" Title="Flurstückskennzeichen"/>
+				<Alias ColumnName="bs_bart_text" Title="Buchungsart"/>
+				<Alias ColumnName="bs_miteig_ant_zae" Title="Anteil Miteigentum Zähler"/>
+				<Alias ColumnName="bs_miteig_ant_nen" Title="Anteil Miteigentum Nenner"/>
+				
+				<Alias ColumnName="nnummer_ant_zae" Title="Anteilsverhältnis Zähler"/>
+				<Alias ColumnName="nnummer_ant_nen" Title="Anteilsverhältnis Nenner"/>
+				<Alias ColumnName="nnummer_lnr" Title="Namensnummer"/>
+				<Alias ColumnName="nnummer_eigentuemerart_text" Title="Eigentümerart"/>
+				<Alias ColumnName="bblatt_kennz" Title="Buchungsblattkennzeichen"/>
+				<Alias ColumnName="bblatt_bezirk" Title="Buchungsblattbezirk"/>
+				<Alias ColumnName="bblatt_bezirk_text" Title="Buchungsblattbezirk - Text"/>
+				<Alias ColumnName="bblatt_nummer" Title="Buchungsblattnummer"/>
+				<Alias ColumnName="bblarr_bart_text" Title="Blattart"/>
+				<Alias ColumnName="person_name" Title="Nachname (Firma)"/>
+				<Alias ColumnName="person_vorname" Title="Vorname"/>
+				<Alias ColumnName="person_anrede_text" Title="Anrede"/>
+				<Alias ColumnName="person_akad_grad" Title="Akadem. Grad"/>
+			</ColumnHeaderAliases>
+			<Sql><![CDATA[
+				SELECT 
+					distinct(bblatt.id),
+					a.fsk,
+					
+					-- ax_buchungsstelle:
+					--c.name AS bs_bart,
+					c.anzeigetext AS bs_bart_text,
+					mebs.ant_zae AS bs_miteig_ant_zae,
+					mebs.ant_nen AS bs_miteig_ant_nen,
+
+					-- ax_namensnummer:
+					nnummer.lnr AS nnummer_lnr,
+					--nnummer.art AS nnummer_eigentuemerart,
+					nnummer.ant_zae AS nnummer_ant_zae,
+					nnummer.ant_nen AS nnummer_ant_nen,
+					r_eigentuemerart.anzeigetext AS nnummer_eigentuemerart_text,
+
+					-- ax_buchungsblatt:
+					bblatt.bbk AS bblatt_kennz,
+					bblatt.bbz_bbb AS bblatt_bezirk,
+					ax_buchungsblattbezirk.bez AS bblatt_bezirk_text,
+					bblatt.bbn AS bblatt_nummer,
+					--bblatt.blt AS bblatt_bart,
+					r_bblattart.anzeigetext AS bblarr_bart_text,
+
+					-- ax_person:
+					--person.id_hash AS id_hash_person,
+					r_anrede.anzeigetext AS person_anrede_text,
+					person.akd AS person_akad_grad,
+					person.nof AS person_name,
+					person.vna AS person_vorname,
+					--person.anr AS person_anrede,
+					--concat(r_anrede.name, "/", r_anrede.anzeigetext) AS person_anrede_text,
+					person.geb AS person_geburtsdatum,
+					person.gna AS person_geburtsname
+				FROM	
+					alkisgeometrie_f ax
+					INNER JOIN ax_flurstueck a ON a.id_hash = ax.id_hash
+					INNER JOIN v_sg_me_fs_bs mebs ON mebs.id_hash_fs = a.id_hash AND mebs.endet IS NULL
+					LEFT JOIN codelist c 				ON c.name = mebs.bar AND c.art = 'AX_Buchungsart_Buchungsstelle'
+					INNER JOIN ax_buchungsblatt bblatt 	ON bblatt.id_hash = mebs.best_von_hash AND bblatt.endet IS NULL AND bblatt.blt != 5000
+					LEFT JOIN ax_namensnummer nnummer 	ON nnummer.bst_von_hash = bblatt.id_hash AND nnummer.endet IS NULL
+					LEFT JOIN ax_person person			ON person.id_hash = nnummer.benennt_hash AND person.endet IS NULL
+					LEFT JOIN ax_buchungsblattbezirk	ON ax_buchungsblattbezirk.sll_bbb = bblatt.bbz_bbb AND ax_buchungsblattbezirk.zst_lan = bblatt.bbz_lan AND ax_buchungsblattbezirk.endet IS NULL 
+					LEFT JOIN CODELIST r_bblattart		ON r_bblattart.name = CAST(bblatt.blt AS VARCHAR) AND r_bblattart.ART = 'AX_Blattart_Buchungsblatt'
+					LEFT JOIN CODELIST r_eigentuemerart	ON r_eigentuemerart.NAME = CAST(nnummer.art AS VARCHAR) AND r_eigentuemerart.ART = 'AX_Eigentuemerart_Namensnummer'
+					LEFT JOIN CODELIST r_anrede		ON r_anrede.NAME = CAST(person.anr AS VARCHAR) AND r_anrede.ART = 'AX_Anrede_Person'
+				WHERE 
+					a.ENDET IS NULL 
+					AND ax.gid = {0}
+
+			]]></Sql>
+		</WorkSheet>
+		
+		<WorkSheet>
+			<AccessRight>ax_buchungsblatt</AccessRight>
+			<TabColor>CYAN</TabColor>
+			<WorkSheetName>Eigentümer (Mit Anschrift)</WorkSheetName>
+			<ColumnHeaderAliases>
+				<Alias ColumnName="ID" Title="ALKIS-Id">ALKIS-Id</Alias>
+				<Alias ColumnName="fsk" Title="Flurstückskennzeichen"/>
+				<Alias ColumnName="bs_bart_text" Title="Buchungsart"/>
+				<Alias ColumnName="bs_miteig_ant_zae" Title="Anteil Miteigentum Zähler"/>
+				<Alias ColumnName="bs_miteig_ant_nen" Title="Anteil Miteigentum Nenner"/>
+				
+				<Alias ColumnName="nnummer_ant_zae" Title="Anteilsverhältnis Zähler"/>
+				<Alias ColumnName="nnummer_ant_nen" Title="Anteilsverhältnis Nenner"/>
+				<Alias ColumnName="nnummer_lnr" Title="Namensnummer"/>
+				<Alias ColumnName="nnummer_eigentuemerart_text" Title="Eigentümerart"/>
+				<Alias ColumnName="bblatt_kennz" Title="Buchungsblattkennzeichen"/>
+				<Alias ColumnName="bblatt_bezirk" Title="Buchungsblattbezirk"/>
+				<Alias ColumnName="bblatt_bezirk_text" Title="Buchungsblattbezirk - Text"/>
+				<Alias ColumnName="bblatt_nummer" Title="Buchungsblattnummer"/>
+				<Alias ColumnName="bblarr_bart_text" Title="Blattart"/>
+				<Alias ColumnName="person_name" Title="Nachname (Firma)"/>
+				<Alias ColumnName="person_vorname" Title="Vorname"/>
+				<Alias ColumnName="person_anrede_text" Title="Anrede"/>
+				<Alias ColumnName="person_akad_grad" Title="Akadem. Grad"/>
+			</ColumnHeaderAliases>
+			<Sql><![CDATA[
+				SELECT 
+					distinct(bblatt.id),
+					a.fsk,
+					
+					-- ax_buchungsstelle:
+					--c.name AS bs_bart,
+					c.anzeigetext AS bs_bart_text,
+					mebs.ant_zae AS bs_miteig_ant_zae,
+					mebs.ant_nen AS bs_miteig_ant_nen,
+
+					-- ax_namensnummer:
+					nnummer.lnr AS nnummer_lnr,
+					--nnummer.art AS nnummer_eigentuemerart,
+					nnummer.ant_zae AS nnummer_ant_zae,
+					nnummer.ant_nen AS nnummer_ant_nen,
+					r_eigentuemerart.anzeigetext AS nnummer_eigentuemerart_text,
+
+					-- ax_buchungsblatt:
+					bblatt.bbk AS bblatt_kennz,
+					bblatt.bbz_bbb AS bblatt_bezirk,
+					bblatt.bbn AS bblatt_nummer,
+					ax_buchungsblattbezirk.bez AS bblatt_bezirk_text,
+					--bblatt.blt AS bblatt_bart,
+					r_bblattart.anzeigetext AS bblarr_bart_text,
+
+					-- ax_person:
+					--person.id_hash AS id_hash_person,
+					person.nof AS person_name,
+					person.vna AS person_vorname,
+					--person.anr AS person_anrede,
+					--concat(r_anrede.name, "/", r_anrede.anzeigetext) AS person_anrede_text,
+					r_anrede.anzeigetext AS person_anrede_text,
+					person.akd AS person_akad_grad,
+					person.geb AS person_geburtsdatum,
+					person.gna AS person_geburtsname,
+					
+					anschrift.plz AS plz,
+					anschrift.orp AS wohnort,
+					anschrift.ott AS ortsteil,
+					concat(
+						anschrift.orp, 
+						(CASE WHEN anschrift.ott IS NULL THEN '' ELSE concat(' (', anschrift.ott, ')') END)
+					) AS ort_ortsteil,
+					anschrift.str AS strasse,
+					anschrift.hsn AS hnr,
+					anschrift.hsnr_z AS hnr_zusatz,
+					concat(anschrift.hsn, (CASE WHEN anschrift.hsnr_z IS NULL THEN '' ELSE ' ' END), anschrift.hsnr_z) AS hnr_mit_zusatz,
+					r_qualitaet.pro_name,
+					r_qualitaet.des_anschrift,
+					concat(r_qualitaet.pro_name, ' / ', r_qualitaet.des_anschrift) AS qualitaet_text
+												
+				FROM	
+					alkisgeometrie_f ax
+					INNER JOIN ax_flurstueck a ON a.id_hash = ax.id_hash
+					INNER JOIN v_sg_me_fs_bs mebs ON mebs.id_hash_fs = a.id_hash AND mebs.endet IS NULL
+					LEFT JOIN codelist c 				ON c.name = mebs.bar AND c.art = 'AX_Buchungsart_Buchungsstelle'
+					INNER JOIN ax_buchungsblatt bblatt 	ON bblatt.id_hash = mebs.best_von_hash AND bblatt.endet IS NULL AND bblatt.blt != 5000
+					LEFT JOIN ax_namensnummer nnummer 	ON nnummer.bst_von_hash = bblatt.id_hash AND nnummer.endet IS NULL
+					LEFT JOIN ax_person person			ON person.id_hash = nnummer.benennt_hash AND person.endet IS NULL
+					LEFT JOIN ax_buchungsblattbezirk	ON ax_buchungsblattbezirk.sll_bbb = bblatt.bbz_bbb AND ax_buchungsblattbezirk.zst_lan = bblatt.bbz_lan AND ax_buchungsblattbezirk.endet IS NULL 
+					LEFT JOIN CODELIST r_bblattart		ON r_bblattart.name = CAST(bblatt.blt AS VARCHAR) AND r_bblattart.ART = 'AX_Blattart_Buchungsblatt'
+					LEFT JOIN CODELIST r_eigentuemerart	ON r_eigentuemerart.NAME = CAST(nnummer.art AS VARCHAR) AND r_eigentuemerart.ART = 'AX_Eigentuemerart_Namensnummer'
+					LEFT JOIN CODELIST r_anrede		ON r_anrede.NAME = CAST(person.anr AS VARCHAR) AND r_anrede.ART = 'AX_Anrede_Person'
+					
+					LEFT JOIN r_hat r_hat ON r_hat.id_hash = person.id_hash AND r_hat.endet IS NULL
+					LEFT JOIN ax_anschrift anschrift ON anschrift.id_hash = r_hat.rel_hash AND anschrift.endet IS NULL
+					LEFT JOIN r_qualitaetsangaben r_qualitaet ON r_qualitaet.id_hash = anschrift.id_hash AND r_qualitaet.endet is null
+				WHERE 
+					a.ENDET IS NULL 
+					AND ax.gid = {0}
+
+			]]></Sql>
+		</WorkSheet>
+
+		<WorkSheet>
+			<AccessRight></AccessRight>
+			<TabColor>yellow</TabColor>
+			<WorkSheetName>Nutzungsarten</WorkSheetName>
+			<ColumnHeaderAliases>
+				<Alias ColumnName="objektart_name" Title="Nutzungsart">Nutzungsart</Alias>
+				<Alias ColumnName="fkt_val" Title="Funktion">Funktion</Alias>
+				<Alias ColumnName="sfl" Title="Schnittfläche">Schnittfläche [m²]</Alias>
+				<Alias ColumnName="anteil" Title="Anteil">Anteil in %</Alias>
+			</ColumnHeaderAliases>
+			<Sql><![CDATA[
+                SELECT 
+					tg_objektart.name AS objektart_name,
+					alkisgeometrie_f.fkt_val,
+					nutzung.sfl,
+					round( CAST((100*nutzung.sfl/nutzung.afl) as numeric), 0) as anteil
+				FROM 	
+					alkisgeometrie_f ax
+					INNER JOIN ax_flurstueck a ON a.id_hash = ax.id_hash
+						
+					LEFT JOIN tg_nutzung nutzung ON 
+						nutzung.fsk = a.fsk
+						AND nutzung.endet IS NULL 
+						AND nutzung.sfl > 0.1
+					LEFT JOIN tg_objektarten tg_objektart ON tg_objektart.objektart = nutzung.art_tn
+					INNER JOIN alkisgeometrie_f ON 
+						alkisgeometrie_f.id_hash = nutzung.id_tn_hash AND 
+						alkisgeometrie_f.endet is null
+				WHERE 	a.ENDET IS NULL 
+						AND ax.gid = {0}
+
+			]]></Sql>
+		</WorkSheet>
+
+		<WorkSheet>
+			<AccessRight></AccessRight>
+			<TabColor>blue</TabColor>
+			<WorkSheetName>Lagebezeichnungen</WorkSheetName>
+			<ColumnHeaderAliases>
+				<Alias ColumnName="fsk" Title="Flurstueckskennzeichen">Flurstueckskennzeichen</Alias>
+				<Alias ColumnName="kreis_region" Title="Kreis / Region">Kreis / Region</Alias>
+				<Alias ColumnName="gemeinde" Title="Gemeinde">Gemeinde</Alias>
+				<Alias ColumnName="strasse" Title="Strasse">Strasse</Alias>
+				<Alias ColumnName="hausnummer" Title="Hausnummer">Hausnummer</Alias>
+				<Alias ColumnName="str_mit_hnr" Title="Zusatz zur Lagebezeichnung">Straße mit Hausnummer</Alias>
+			</ColumnHeaderAliases>
+			<Sql><![CDATA[
+				SELECT 
+					a.fsk,
+					me_lage.kreis_region,
+					me_lage.gemeinde,
+					me_lage.strasse,
+					me_lage.hausnummer,
+					me_lage.strasse || CASE WHEN me_lage.hausnummer IS NULL THEN '' ELSE ' ' || me_lage.hausnummer END str_mit_hnr
+				FROM 	
+					alkisgeometrie_f ax
+					INNER JOIN ax_flurstueck a ON a.id_hash = ax.id_hash
+					INNER JOIN v_sg_me_fs_lagebezeichnung me_lage ON me_lage.id_hash_fs = a.id_hash
+				WHERE 	
+					a.ENDET IS NULL 
+					AND ax.gid = {0}
+				ORDER BY me_lage.kreis_region, me_lage.gemeinde, me_lage.strasse, me_lage.hausnummer
+			]]></Sql>
+		</WorkSheet>
+	</SAGisExcelExportItem>
+</SAGisExcelExportDefinition>

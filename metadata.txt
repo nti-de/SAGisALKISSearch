@@ -1,0 +1,63 @@
+# This file contains metadata for your plugin.
+
+# This file should be included when you package your plugin.# Mandatory items:
+
+[general]
+name=SAGis ALKIS Suche
+qgisMinimumVersion=3.28
+description=Plugin zum Einbinden und Durchsuchen einer ALKIS-Datenbank
+version=1.0.0
+author=NTI Deutschland GmbH
+email=qgis-de@nti.biz
+
+about=DE: SAGis ALKIS Suche ermöglicht das Einbinden, Durchsuchen und Exportieren von ALKIS Flurstückdaten.
+      Unterstützt werden mit dem SAGis ALKIS Konverter erstellte Datenbanken (PostgreSQL/SQLite).
+
+      EN: SAGis ALKIS Search enables the integration, search and export of ALKIS parcel data.
+      Databases created with the SAGis ALKIS converter are supported (PostgreSQL/SQLite).
+
+      Funktionen:
+      - Einbinden der Datenbank
+      - Suche nach Straßennamen, Gebäuden und Flurstücken
+      - Anzeigen von Flurstückdaten
+      - Excel Export von Flurstückdaten
+      - Anzeigen eines Flurstücks in SAGis web
+
+      Voraussetzungen/Requirements:
+      - pandas (tested with version 2.0.2)
+      - xlsxwriter (tested with version 3.1.9)
+      - xsdata (tested with version 23.8)
+
+tracker=https://github.com/nti-de/SAGisALKISSearch/issues
+repository=https://github.com/nti-de/SAGisALKISSearch/
+# End of mandatory metadata
+
+# Recommended items:
+
+hasProcessingProvider=no
+# Uncomment the following line and add your changelog:
+# changelog=
+
+# Tags are comma separated with spaces allowed
+tags=python, alkis, germany
+
+homepage=http://www.nti.biz/de/
+category=Plugins
+icon=resources/SAGis_Logo_Search.png
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+
+# Since QGIS 3.8, a comma separated list of plugins to be installed
+# (or upgraded) can be specified.
+# Check the documentation for more information.
+# plugin_dependencies=
+
+Category of the plugin: Raster, Vector, Database or Web
+# category=
+
+# If the plugin can run on QGIS Server.
+server=False
+
