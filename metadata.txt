@@ -41,7 +41,7 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=python, alkis, germany
 
-homepage=http://www.nti.biz/de/
+homepage=https://github.com/nti-de/SAGisALKISSearch/
 category=Plugins
 icon=resources/SAGis_Logo_Search.png
 # experimental flag
