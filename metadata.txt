@@ -6,9 +6,9 @@
 name=SAGis ALKIS Suche
 qgisMinimumVersion=3.28
 description=Plugin zum Einbinden und Durchsuchen einer ALKIS-Datenbank
-version=1.0.0
+version=1.0.1
 author=NTI Deutschland GmbH
-email=qgis-de@nti.biz
+email=qgis-de@nti-group.com
 
 about=DE: SAGis ALKIS Suche ermöglicht das Einbinden, Durchsuchen und Exportieren von ALKIS Flurstückdaten.
       Unterstützt werden mit dem SAGis ALKIS Konverter erstellte Datenbanken (PostgreSQL/SQLite).

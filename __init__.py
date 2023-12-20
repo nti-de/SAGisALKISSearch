@@ -1,7 +1,7 @@
 import os
 
 PLUGIN_NAME = "SAGis ALKIS Suche"
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 DEPENDENCIES = [
     "pandas",
     "xlsxwriter",
