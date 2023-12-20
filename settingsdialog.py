@@ -5,7 +5,6 @@ from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QMessageBox
 from qgis.PyQt import uic, QtGui
 from qgis.core import QgsSettings
 
-from . import VERSION
 from . import loggerutils
 from . import settings
 from . import utils
@@ -23,7 +22,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setupUi(self)
-        self.labelVersion.setText(VERSION)
+        self.set_version_label()
         self.connection_names = []
 
         self.rbSagisPostgres.toggled.connect(self.datasource_type_changed)
@@ -152,3 +151,9 @@ class SettingsDialog(QDialog, FORM_CLASS):
 
         self.rbSagisPostgres.setVisible(config.getboolean(section, "SAGisPgSql", fallback=True))
         self.rbSagisSqlite.setVisible(config.getboolean(section, "SAGisSqlite", fallback=True))
+
+    def set_version_label(self):
+        metadata_parser = configparser.ConfigParser()
+        path = os.path.join(os.path.dirname(__file__), "metadata.txt")
+        metadata_parser.read(path)
+        self.labelVersion.setText(metadata_parser.get("general", "version", fallback=""))

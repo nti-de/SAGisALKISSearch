@@ -2,7 +2,7 @@
 ###### (SAGis ALKIS Search)
 
 SAGis ALKIS Suche ist eine Erweiterung für die GIS-Software QGIS zum Einbinden, Durchsuchen und Exportieren von ALKIS Flurstückdaten. \
-Unterstützt werden mit dem [SAGis ALKIS](https://www.nti.biz/de/produkte/sagis-loesungen/sagis-alkis/) Konverter erstellte Datenbanken (PostgreSQL/SQLite).
+Unterstützt werden mit dem [SAGis ALKIS](https://www.nti-group.com/de/produkte/sagis-loesungen/sagis-alkis/) Konverter erstellte Datenbanken (PostgreSQL/SQLite).
 
 ## Funktionen
 
@@ -10,7 +10,7 @@ Unterstützt werden mit dem [SAGis ALKIS](https://www.nti.biz/de/produkte/sagis-
 - Suche nach Straßennamen, Gebäuden und Flurstücken
 - Anzeigen von Flurstückdaten
 - Excel Export von Flurstückdaten
-- Anzeigen eines Flurstücks in [SAGis web](https://www.nti.biz/de/produkte/sagis-loesungen/sagis-web/)
+- Anzeigen eines Flurstücks in [SAGis web](https://www.nti-group.com/de/produkte/sagis-loesungen/sagis-web/)
 
 ## Nutzung
 
@@ -39,9 +39,15 @@ Für eine erfolgreiche Ausführung des Programms müssen zudem folgende Python-K
   ```
 </details>
 
+### Beispieldaten
+
+Bei individuellem Interesse stellen wir gerne eine Datenbank zur Verfügung.  
+Wenden Sie sich bitte an qgis-de@nti-group.com.
+
+
 ### Kontakt
-- Mail: qgis-de@nti.biz
-- Web: https://nti.biz/de
+- Mail: qgis-de@nti-group.com
+- Web: https://www.nti-group.com/de
 ---
 
 <sup>
