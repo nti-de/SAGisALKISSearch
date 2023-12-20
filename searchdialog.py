@@ -2,6 +2,7 @@ import os
 from typing import Optional
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIntValidator
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QListWidgetItem, QWidget, QVBoxLayout, QLabel, QListWidget
 from qgis.PyQt import uic, QtGui
 from qgis.core import Qgis, QgsProject, QgsVectorLayer
@@ -64,6 +65,10 @@ class SearchDialog(QDialog, FORM_CLASS):
         self.cbGemarkung = ExtendedComboBox()
         self.tab2.layout().insertRow(3, "Gemarkung:", self.cbGemarkung)
         self.leFsk.textChanged.connect(self.fsk_changed)
+        validator = QIntValidator(self)
+        self.leFln.setValidator(validator)
+        self.leFsnZae.setValidator(validator)
+        self.leFsnNen.setValidator(validator)
 
         self.search_button = self.buttonBox.addButton("Suchen", QDialogButtonBox.ActionRole)
         self.search_button.clicked.connect(self.search_clicked)

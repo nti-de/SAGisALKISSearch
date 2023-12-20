@@ -48,7 +48,11 @@
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QLineEdit" name="leFsk"/>
+        <widget class="QLineEdit" name="leFsk">
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item row="2" column="0">
         <widget class="QLabel" name="label_2">
@@ -86,13 +90,25 @@
         </widget>
        </item>
        <item row="3" column="1">
-        <widget class="QLineEdit" name="leFln"/>
+        <widget class="QLineEdit" name="leFln">
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item row="4" column="1">
-        <widget class="QLineEdit" name="leFsnZae"/>
+        <widget class="QLineEdit" name="leFsnZae">
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item row="5" column="1">
-        <widget class="QLineEdit" name="leFsnNen"/>
+        <widget class="QLineEdit" name="leFsnNen">
+         <property name="clearButtonEnabled">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
        <item row="1" column="0" colspan="2">
         <widget class="Line" name="line">
