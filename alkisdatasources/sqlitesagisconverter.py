@@ -176,7 +176,7 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
             return sql_, False
 
         sql, first = add_condition(sql, "gemarkung", gmk_gmn, True)
-        sql, first = add_condition(sql, "fln", fln, first)
+        sql, first = add_condition(sql, "flurnummer", fln, first)
         sql, first = add_condition(sql, "flurstuecksnummer_zaehler", fsn_zae, first)
         sql, first = add_condition(sql, "flurstuecksnummer_nenner", fsn_nen, first)
 
