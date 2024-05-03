@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import QMessageBox
 from qgis.core import Qgis
 from qgis.utils import iface
 
+from .translation import translate
+
 
 def check(required_packages: list[str], path_to_bundled_packages="") -> list[str]:
     """Checks whether the required packages are installed/available.
@@ -17,9 +19,9 @@ def check(required_packages: list[str], path_to_bundled_packages="") -> list[str
 
     missing_packages = []
     for package in required_packages:
-        if package in sys.modules:
+        if package in sys.modules or package.lower() in sys.modules:
             continue
-        elif importlib.util.find_spec(package):
+        elif importlib.util.find_spec(package) or importlib.util.find_spec(package.lower()):
             continue
         elif path_to_bundled_packages:
             # Add plugin folder to PATH to use included packages if present (plugin folder).
@@ -28,20 +30,23 @@ def check(required_packages: list[str], path_to_bundled_packages="") -> list[str
                 sys.path.append(path_to_bundled_packages)
                 if importlib.util.find_spec(package):
                     continue
+                # Try lowercase
+                if importlib.util.find_spec(package.lower()):
+                    continue
 
         missing_packages.append(package)
 
     return missing_packages
 
 
-def install(package: str) -> bool:
+def install(package: str) -> (bool, str):
     try:
-        code = subprocess.check_call(["pip", "install", package])
-        if code == 0:
-            return True
-        return False
-    except:
-        return False
+        output = subprocess.check_output(["python3", "-m", "pip", "install", package], stderr=subprocess.STDOUT)
+        return True, output.decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        return False, str(e.output.decode("utf-8"))
+    except Exception as e:
+        return False, str(e)
 
 
 def check_packages(required_packages: list[str], plugin_name="", plugin_path="") -> bool:
@@ -56,11 +61,18 @@ def check_packages(required_packages: list[str], plugin_name="", plugin_path="")
     if not missing_packages:
         return True
 
-    message = "Die folgenden Softwarekomponenten werden zur Ausführung von SAGis XPlanung benötigt:\n\n"
+    message = translate("The following software components are required for") + " " + (plugin_name or translate("a SAGis Plugin"))
+    message += ":\n\n"
     message += "\n".join(missing_packages)
-    message += "\n\nSollen die fehlenden Komponenten installiert werden?"
+    message += "\n\n"
+    message += translate("Do you want to install the missing components?")
 
-    dialog = QMessageBox(QMessageBox.Question, 'Fehlende Abhängigkeiten', message, QMessageBox.Yes | QMessageBox.No)
+    dialog = QMessageBox(
+        QMessageBox.Question,
+        translate("Missing Dependencies"),
+        message,
+        QMessageBox.Yes | QMessageBox.No
+    )
     reply = dialog.exec()
 
     if reply == QMessageBox.No:
@@ -69,21 +81,27 @@ def check_packages(required_packages: list[str], plugin_name="", plugin_path="")
     error = False
     log = []
     for package in missing_packages:
-        success = install(package)
-        if not success:
+        success, error_message = install(package)
+        if success:
+            log.append(f"{package} ... " + translate("Installed"))
+        else:
             error = True
-            log.append(f'{package} ... Fehler bei Installation')
+            log.append(f"{package} ... " + translate("Installation error") + f"\n{error_message}\n")
 
     if error:
         iface.messageBar().pushMessage(
             plugin_name,
-            f'Fehler beim Installieren der Python-Pakete', '\n'.join(log),
-            level=Qgis.MessageLevel.Critical
+            translate("Error installing Python packages"),
+            "\n".join(log),
+            level=Qgis.MessageLevel.Critical,
+            duration=0
         )
     else:
         iface.messageBar().pushMessage(
             plugin_name,
-            f'Python-Pakete erfolgreich installiert', '\n'.join(log),
-            level=Qgis.MessageLevel.Success
+            translate("Python packages successfully installed"),
+            "\n".join(log),
+            level=Qgis.MessageLevel.Success,
+            duration=0
         )
         return True

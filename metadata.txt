@@ -6,7 +6,7 @@
 name=SAGis ALKIS Suche
 qgisMinimumVersion=3.28
 description=Plugin zum Einbinden und Durchsuchen einer ALKIS-Datenbank
-version=1.0.1
+version=1.0.2
 author=NTI Deutschland GmbH
 email=qgis-de@nti-group.com
 
@@ -36,7 +36,9 @@ repository=https://github.com/nti-de/SAGisALKISSearch/
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-# changelog=
+changelog=
+    1.0.2
+    - Fix package import for new Python version
 
 # Tags are comma separated with spaces allowed
 tags=python, alkis, germany
