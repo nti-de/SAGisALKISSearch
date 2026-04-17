@@ -1,7 +1,7 @@
 from typing import Any
 
-from PyQt5.QtXml import QDomDocument
-from qgis.core import QgsDataSourceUri, QgsMapLayer, QgsProject, QgsVectorLayer
+from qgis.PyQt.QtXml import QDomDocument
+from qgis.core import QgsDataSourceUri, QgsProject, QgsVectorLayer
 
 from .alkisdatasource import AlkisDataSourceSqlite, AlkisDataSourceType, TableInfo
 

@@ -1,5 +1,5 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QLabel, QFormLayout
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QLabel, QFormLayout
 
 from ...... import commonfunctions
 from ......resultdialog.dialogbindingwidget import DialogBindingWidget
@@ -40,16 +40,16 @@ class AX_FLURSTUECK_SDO_RELATE_AX_GEBAEUDE(DialogItem):
         self.layout().addRow("Lagebezeichnung:", self.data_gvLagebezeichnung)
 
         for i in range(self.layout().rowCount()):
-            item = self.layout().itemAt(i, QFormLayout.LabelRole)
+            item = self.layout().itemAt(i, QFormLayout.ItemRole.LabelRole)
             if item:
                 label = item.widget()
                 font = label.font()
                 font.setBold(True)
                 item.widget().setFont(font)
 
-            item = self.layout().itemAt(i, QFormLayout.FieldRole)
+            item = self.layout().itemAt(i, QFormLayout.ItemRole.FieldRole)
             if item and isinstance(item.widget(), QLabel):
-                item.widget().setTextInteractionFlags(item.widget().textInteractionFlags() | Qt.TextSelectableByMouse)
+                item.widget().setTextInteractionFlags(item.widget().textInteractionFlags() | Qt.TextInteractionFlag.TextSelectableByMouse)
 
     def set_label_texts(self):
         # Kennung

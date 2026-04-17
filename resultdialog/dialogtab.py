@@ -1,6 +1,6 @@
 from typing import Union
 
-from PyQt5.QtWidgets import QScrollArea, QWidget, QVBoxLayout
+from qgis.PyQt.QtWidgets import QScrollArea, QWidget, QVBoxLayout
 
 from .dialogitem import DialogItem
 from .. import commonfunctions

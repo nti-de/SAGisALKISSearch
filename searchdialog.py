@@ -1,9 +1,9 @@
 import os
 from typing import Optional
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIntValidator
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QListWidgetItem, QWidget, QVBoxLayout, QLabel, QListWidget
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtGui import QIntValidator
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QListWidgetItem, QWidget, QVBoxLayout, QLabel, QListWidget
 from qgis.PyQt import uic, QtGui
 from qgis.core import Qgis, QgsProject, QgsVectorLayer
 from qgis.utils import iface
@@ -70,13 +70,13 @@ class SearchDialog(QDialog, FORM_CLASS):
         self.leFsnZae.setValidator(validator)
         self.leFsnNen.setValidator(validator)
 
-        self.search_button = self.buttonBox.addButton("Suchen", QDialogButtonBox.ActionRole)
+        self.search_button = self.buttonBox.addButton("Suchen", QDialogButtonBox.ButtonRole.ActionRole)
         self.search_button.clicked.connect(self.search_clicked)
 
-        self.open_dialog_button = self.buttonBox.addButton("Dialog öffnen", QDialogButtonBox.ActionRole)
+        self.open_dialog_button = self.buttonBox.addButton("Dialog öffnen", QDialogButtonBox.ButtonRole.ActionRole)
         self.open_dialog_button.clicked.connect(self.open_dialog_clicked)
 
-        self.unselect_button = self.buttonBox.addButton("Markierungen aufheben", QDialogButtonBox.ActionRole)
+        self.unselect_button = self.buttonBox.addButton("Markierungen aufheben", QDialogButtonBox.ButtonRole.ActionRole)
         self.unselect_button.setVisible(False)
         self.unselect_button.clicked.connect(searchresulthandler.unselect_flurstuecke)
 
@@ -308,11 +308,11 @@ class SearchDialog(QDialog, FORM_CLASS):
             caption = utils.get_case_insensitive(r, "caption", "-")
             fid = utils.get_case_insensitive(r, "fid")
             item = QListWidgetItem(caption, self.result_list_widget)
-            item.setData(Qt.UserRole, fid)
+            item.setData(Qt.ItemDataRole.UserRole, fid)
             item.setToolTip("Suchergebnis in der Karte zeigen.")
 
         if layer:
-            self.result_list_widget.itemClicked.connect(lambda i: searchresulthandler.highlight_result(layer, i.data(Qt.UserRole)))
+            self.result_list_widget.itemClicked.connect(lambda i: searchresulthandler.highlight_result(layer, i.data(Qt.ItemDataRole.UserRole)))
 
         self.open_dialog_button.setEnabled(len(results) > 0)
         self.unselect_button.setEnabled(len(results) > 0)

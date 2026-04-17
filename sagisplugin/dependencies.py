@@ -3,7 +3,7 @@ import os
 import subprocess
 import sys
 
-from PyQt5.QtWidgets import QMessageBox
+from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.core import Qgis
 from qgis.utils import iface
 
@@ -68,14 +68,14 @@ def check_packages(required_packages: list[str], plugin_name="", plugin_path="")
     message += translate("Do you want to install the missing components?")
 
     dialog = QMessageBox(
-        QMessageBox.Question,
+        QMessageBox.Icon.Question,
         translate("Missing Dependencies"),
         message,
-        QMessageBox.Yes | QMessageBox.No
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
     )
     reply = dialog.exec()
 
-    if reply == QMessageBox.No:
+    if reply == QMessageBox.StandardButton.No:
         return False
 
     error = False

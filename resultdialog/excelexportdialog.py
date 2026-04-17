@@ -1,10 +1,9 @@
 import glob
 import os
 import pathlib
-import sys
 
-from PyQt5.QtCore import QUrl, QDir, Qt
-from PyQt5.QtGui import QStandardItem, QIcon
+from qgis.PyQt.QtCore import QUrl, QDir, Qt
+from qgis.PyQt.QtGui import QStandardItem, QIcon
 from qgis.core import Qgis, QgsApplication, QgsProject, QgsTask
 from qgis.utils import iface
 
@@ -15,7 +14,7 @@ from ..sagisexcelexportdefinition.excelexporttask import ExcelExportTask
 from ..sagisexcelexportdefinition.sagis_excel_export_definition import *
 from ..ui.twolistselection import TwoListSelection
 
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QRadioButton, QButtonGroup, QPushButton, \
+from qgis.PyQt.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QRadioButton, QButtonGroup, QPushButton, \
     QFileDialog, QWidget
 
 
@@ -134,7 +133,7 @@ class ExcelExportDialog(QDialog):
         if report_count > 0:
             self.combo_box_reports.addItem("_" * 50)
             item: QStandardItem = self.combo_box_reports.model().item(report_count)
-            item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
         self.combo_box_reports.addItem("Datenexport - Gesamter Datensatz", -1)
 
     def populate_sort_order(self, items: dict):

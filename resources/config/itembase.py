@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtSql import QSqlQueryModel
-from PyQt5.QtWidgets import QFrame, QTableView
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtSql import QSqlQueryModel
+from qgis.PyQt.QtWidgets import QFrame, QTableView
 
 from ... import commonfunctions
 from ... import loggerutils
@@ -76,6 +76,6 @@ class ItemBase(QFrame):
         header_dict = {header_text.from_value: header_text.to for header_text in binding.header_text}
 
         for c in range(model.columnCount()):
-            old_text = model.headerData(c, Qt.Horizontal, Qt.DisplayRole)
+            old_text = model.headerData(c, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole)
             if old_text in header_dict:
-                model.setHeaderData(c, Qt.Horizontal, header_dict.get(old_text), Qt.DisplayRole)
+                model.setHeaderData(c, Qt.Orientation.Horizontal, header_dict.get(old_text), Qt.ItemDataRole.DisplayRole)

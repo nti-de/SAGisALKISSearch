@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from PyQt5.QtCore import QDateTime, QDate
+from qgis.PyQt.QtCore import QDateTime, QDate
 from dateutil import parser
 from qgis.PyQt.QtCore import NULL
 

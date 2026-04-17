@@ -1,5 +1,5 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QLabel, QFormLayout
+from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QLabel, QFormLayout
 
 from ...... import commonfunctions
 from ......resultdialog.dialogitem import DialogItem
@@ -35,13 +35,13 @@ class AX_FLURSTUECK_SGA_SONDEREINTRAEGE(DialogItem):
         self.labelCurrentIndex.setFont(bold_font)
 
         for i in range(self.layout().rowCount()):
-            item = self.layout().itemAt(i, QFormLayout.LabelRole)
+            item = self.layout().itemAt(i, QFormLayout.ItemRole.LabelRole)
             if item:
                 item.widget().setFont(bold_font)
 
-            item = self.layout().itemAt(i, QFormLayout.FieldRole)
+            item = self.layout().itemAt(i, QFormLayout.ItemRole.FieldRole)
             if item and isinstance(item.widget(), QLabel):
-                item.widget().setTextInteractionFlags(item.widget().textInteractionFlags() | Qt.TextSelectableByMouse)
+                item.widget().setTextInteractionFlags(item.widget().textInteractionFlags() | Qt.TextInteractionFlag.TextSelectableByMouse)
 
     def set_label_texts(self):
         # Sondereintrag

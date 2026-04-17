@@ -1,6 +1,6 @@
 from logging import Logger
 
-from PyQt5.QtWidgets import QDockWidget
+from qgis.PyQt.QtWidgets import QDockWidget
 from qgis.gui import QgsMessageViewer
 from qgis.core import Qgis, QgsMessageLog
 from qgis.utils import iface

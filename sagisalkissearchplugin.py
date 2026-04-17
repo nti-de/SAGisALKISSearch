@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMenu, QToolButton
+from qgis.PyQt.QtWidgets import QMenu, QToolButton
 from qgis.core import QgsProject, QgsVectorLayer
 from qgis.utils import iface
 
@@ -74,7 +74,7 @@ class SagisAlkisSearchPlugin(SagisPluginBase):
         self.tool_button = QToolButton()
         self.tool_button.setDefaultAction(search_action)
         self.tool_button.setMenu(self.popup_menu)
-        self.tool_button.setPopupMode(QToolButton.MenuButtonPopup)
+        self.tool_button.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
 
         if not self.toolbar:
             self.add_tool_bar()
@@ -100,7 +100,7 @@ class SagisAlkisSearchPlugin(SagisPluginBase):
     def open_settings(self):
         dlg = SettingsDialog(self.iface.mainWindow())
         dlg.show()
-        dlg.exec_()
+        dlg.exec()
 
     def open_dialog_for_selected(self):
         if not SearchDialog.check_datasource_types():

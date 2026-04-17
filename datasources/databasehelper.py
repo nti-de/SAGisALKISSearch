@@ -1,7 +1,7 @@
 from typing import Tuple
 
-from PyQt5.QtCore import QVariant
-from PyQt5.QtSql import QSqlDatabase, QSqlQuery
+from qgis.PyQt.QtCore import QVariant
+from qgis.PyQt.QtSql import QSqlDatabase, QSqlQuery
 
 
 def select_into_dict_list(sql: str, database: QSqlDatabase, null_value_to_none=False) -> Tuple[list[dict], str]:

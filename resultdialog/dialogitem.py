@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from PyQt5.QtWidgets import QSizePolicy, QFrame
+from qgis.PyQt.QtWidgets import QSizePolicy, QFrame
 
 from .dialogbindingwidget import DialogBindingWidget
 from .. import utils
@@ -24,7 +24,7 @@ class DialogItem(QFrame):
 
         self.binding_widgets: dict[str, DialogBindingWidget] = {}
 
-        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
     def set_index(self, current: int, total: int):
         index_label = self.__dict__.get("labelCurrentIndex")

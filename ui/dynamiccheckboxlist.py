@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QTimer, pyqtSignal
-from PyQt5.QtWidgets import QFrame, QGridLayout, QCheckBox, QWidget
+from qgis.PyQt.QtCore import QTimer, pyqtSignal
+from qgis.PyQt.QtWidgets import QFrame, QGridLayout, QCheckBox, QWidget
 
 
 class DynamicCheckBoxList(QFrame):
@@ -9,7 +9,7 @@ class DynamicCheckBoxList(QFrame):
         super().__init__(parent)
         self.checkboxes = []
 
-        self.setFrameStyle(QFrame.Panel)
+        self.setFrameStyle(QFrame.Shape.Panel)
 
         self.grid_layout = QGridLayout()
         self.grid_layout.setSpacing(1)

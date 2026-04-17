@@ -1,7 +1,7 @@
 # https://stackoverflow.com/a/68627623
 
-from PyQt5.QtWidgets import QComboBox, QCompleter
-from PyQt5.QtCore import QSortFilterProxyModel, Qt
+from qgis.PyQt.QtWidgets import QComboBox, QCompleter
+from qgis.PyQt.QtCore import QSortFilterProxyModel, Qt
 from qgis.PyQt import QtGui
 
 
@@ -9,18 +9,18 @@ class ExtendedComboBox(QComboBox):
     def __init__(self, parent=None):
         super(ExtendedComboBox, self).__init__(parent)
 
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setEditable(True)
 
         # add a filter model to filter matching items
         self.pFilterModel = QSortFilterProxyModel(self)
-        self.pFilterModel.setFilterCaseSensitivity(Qt.CaseInsensitive)
+        self.pFilterModel.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.pFilterModel.setSourceModel(self.model())
 
         # add a completer, which uses the filter model
         self.completer = QCompleter(self.pFilterModel, self)
         # always show all (filtered) completions
-        self.completer.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+        self.completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
         self.completer.setMaxVisibleItems(20)
         self.setCompleter(self.completer)
 
@@ -33,7 +33,7 @@ class ExtendedComboBox(QComboBox):
         if text:
             index = self.findText(text)
             self.setCurrentIndex(index)
-            self.activated[str].emit(self.itemText(index))
+            self.activated.emit(self.itemText(index))
 
     # on model change, update the models of the filter and completer as well
     def setModel(self, model):

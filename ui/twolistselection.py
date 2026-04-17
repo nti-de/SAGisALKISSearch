@@ -1,9 +1,9 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QAbstractItemView, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,\
+from qgis.PyQt.QtCore import pyqtSignal, Qt
+from qgis.PyQt.QtGui import QFont
+from qgis.PyQt.QtWidgets import QAbstractItemView, QHBoxLayout, QLabel, QLineEdit, QListWidget, QListWidgetItem,\
     QPushButton, QSizePolicy, QSpacerItem, QVBoxLayout, QWidget
 
 
@@ -54,7 +54,7 @@ class TwoListSelection(QWidget):
         # Left
         self.__left_caption = QLabel(left_caption)
         self.left_list_widget = QListWidget()
-        self.left_list_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.left_list_widget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.left_list_widget.setSortingEnabled(True)
         # Filter
         self.__filter_widget = QLineEdit()
@@ -64,7 +64,7 @@ class TwoListSelection(QWidget):
         # Right
         self.__right_caption = QLabel(right_caption)
         self.right_list_widget = QListWidget()
-        self.right_list_widget.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.right_list_widget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         self.__button_all_to_right = QPushButton(">>")
         self.__button_all_to_right.setToolTip("Alle nach rechts")
@@ -106,12 +106,12 @@ class TwoListSelection(QWidget):
 
         # Middle buttons
         self.__middle_button_layout = QVBoxLayout()
-        self.__middle_button_layout.addItem(QSpacerItem(10, 20, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        self.__middle_button_layout.addItem(QSpacerItem(10, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
         self.__middle_button_layout.addWidget(self.__button_all_to_right)
         self.__middle_button_layout.addWidget(self.__button_selected_to_right)
         self.__middle_button_layout.addWidget(self.__button_selected_to_left)
         self.__middle_button_layout.addWidget(self.__button_all_to_left)
-        self.__middle_button_layout.addItem(QSpacerItem(10, 20, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        self.__middle_button_layout.addItem(QSpacerItem(10, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
         self.__layout.addLayout(self.__middle_button_layout)
 
@@ -125,10 +125,10 @@ class TwoListSelection(QWidget):
         # Right buttons
         if allow_sorting:
             self.__right_button_layout = QVBoxLayout()
-            self.__right_button_layout.addItem(QSpacerItem(10, 20, QSizePolicy.Minimum, QSizePolicy.Expanding))
+            self.__right_button_layout.addItem(QSpacerItem(10, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
             self.__right_button_layout.addWidget(self.__button_up)
             self.__right_button_layout.addWidget(self.__button_down)
-            self.__right_button_layout.addItem(QSpacerItem(10, 20, QSizePolicy.Minimum, QSizePolicy.Expanding))
+            self.__right_button_layout.addItem(QSpacerItem(10, 20, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
 
             self.__layout.addLayout(self.__right_button_layout)
 
@@ -143,7 +143,7 @@ class TwoListSelection(QWidget):
                 item.setHidden(False)
             elif text.casefold() not in item.text().casefold():
                 item.setHidden(True)
-                if self.filter_by_key and text.casefold() in str(item.data(Qt.UserRole)).casefold() \
+                if self.filter_by_key and text.casefold() in str(item.data(Qt.ItemDataRole.UserRole)).casefold() \
                         or self.filter_by_tooltip and text.casefold() in item.toolTip().casefold():
                     item.setHidden(False)
             else:
@@ -154,7 +154,7 @@ class TwoListSelection(QWidget):
         items = [self.right_list_widget.item(i) for i in range(self.right_list_widget.count())]
 
         for item in items:
-            result[item.data(Qt.UserRole)] = item.data(Qt.DisplayRole)
+            result[item.data(Qt.ItemDataRole.UserRole)] = item.data(Qt.ItemDataRole.DisplayRole)
 
         return result
 
@@ -166,9 +166,9 @@ class TwoListSelection(QWidget):
                 element = e
 
             item = QListWidgetItem()
-            item.setData(Qt.DisplayRole, element.text)
-            item.setData(Qt.ToolTipRole, element.tooltip)
-            item.setData(Qt.UserRole, element.key)
+            item.setData(Qt.ItemDataRole.DisplayRole, element.text)
+            item.setData(Qt.ItemDataRole.ToolTipRole, element.tooltip)
+            item.setData(Qt.ItemDataRole.UserRole, element.key)
 
             # Format fixed item
             if element.key in self.__fixed_list:
@@ -307,7 +307,7 @@ class TwoListSelection(QWidget):
                         keys_to_clone.append(fixed)
 
             for item in left_items:
-                item_data = item.data(Qt.UserRole)
+                item_data = item.data(Qt.ItemDataRole.UserRole)
                 if item_data in keys_to_clone:
                     temp_dict[item_data] = source.row(item)
 
@@ -322,10 +322,10 @@ class TwoListSelection(QWidget):
         for row in rows:
             item: QListWidgetItem = source.item(row)
 
-            if item.flags() & Qt.ItemIsSelectable == Qt.ItemIsSelectable:
+            if item.flags() & Qt.ItemFlag.ItemIsSelectable == Qt.ItemFlag.ItemIsSelectable:
                 destination.addItem(item.clone())
-                item.setForeground(Qt.gray)
-                item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
+                item.setForeground(Qt.GlobalColor.gray)
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
                 item.setSelected(False)
 
         self.right_count_changed.emit(self.right_list_widget.count())
@@ -342,30 +342,30 @@ class TwoListSelection(QWidget):
             rows = sorted([index.row() for index in source.selectedIndexes()], reverse=True)
 
         for row in rows:
-            if source.item(row).data(Qt.UserRole) in self.__fixed_list:
+            if source.item(row).data(Qt.ItemDataRole.UserRole) in self.__fixed_list:
                 continue
 
             item: QListWidgetItem = source.takeItem(row)
-            matching_row = self.__get_first_row_by_user_role_data(destination, item.data(Qt.UserRole))
+            matching_row = self.__get_first_row_by_user_role_data(destination, item.data(Qt.ItemDataRole.UserRole))
 
             if matching_row == -1:
                 return
 
             left_item = self.left_list_widget.item(matching_row)
 
-            if left_item.flags() & Qt.ItemIsSelectable != Qt.ItemIsSelectable:
-                left_item.setForeground(Qt.black)
-                left_item.setFlags(item.flags() | Qt.ItemIsSelectable)
+            if left_item.flags() & Qt.ItemFlag.ItemIsSelectable != Qt.ItemFlag.ItemIsSelectable:
+                left_item.setForeground(Qt.GlobalColor.black)
+                left_item.setFlags(item.flags() | Qt.ItemFlag.ItemIsSelectable)
 
         self.right_count_changed.emit(self.right_list_widget.count())
         self.right_list_changed.emit(self.get_right_dict())
         self.__set_button_status()
 
     def __left_double_clicked(self, item: QListWidgetItem):
-        if item.flags() & Qt.ItemIsSelectable == Qt.ItemIsSelectable:
+        if item.flags() & Qt.ItemFlag.ItemIsSelectable == Qt.ItemFlag.ItemIsSelectable:
             self.right_list_widget.addItem(item.clone())
-            item.setForeground(Qt.gray)
-            item.setFlags(item.flags() & ~Qt.ItemIsSelectable)
+            item.setForeground(Qt.GlobalColor.gray)
+            item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsSelectable)
             item.setSelected(False)
 
             self.right_count_changed.emit(self.right_list_widget.count())
@@ -373,10 +373,10 @@ class TwoListSelection(QWidget):
             self.__set_button_status()
 
     def __right_double_clicked(self, item: QListWidgetItem):
-        if item.data(Qt.UserRole) in self.__fixed_list:
+        if item.data(Qt.ItemDataRole.UserRole) in self.__fixed_list:
             return
 
-        matching_row = self.__get_first_row_by_user_role_data(self.left_list_widget, item.data(Qt.UserRole))
+        matching_row = self.__get_first_row_by_user_role_data(self.left_list_widget, item.data(Qt.ItemDataRole.UserRole))
         self.right_list_widget.takeItem(self.right_list_widget.row(item))
 
         if matching_row == -1:
@@ -384,9 +384,9 @@ class TwoListSelection(QWidget):
 
         left_item = self.left_list_widget.item(matching_row)
 
-        if left_item.flags() & Qt.ItemIsSelectable != Qt.ItemIsSelectable:
-            left_item.setForeground(Qt.black)
-            left_item.setFlags(item.flags() | Qt.ItemIsSelectable)
+        if left_item.flags() & Qt.ItemFlag.ItemIsSelectable != Qt.ItemFlag.ItemIsSelectable:
+            left_item.setForeground(Qt.GlobalColor.black)
+            left_item.setFlags(item.flags() | Qt.ItemFlag.ItemIsSelectable)
 
             self.right_count_changed.emit(self.right_list_widget.count())
             self.right_list_changed.emit(self.get_right_dict())
@@ -397,7 +397,7 @@ class TwoListSelection(QWidget):
         items = [list_widget.item(i) for i in range(list_widget.count())]
 
         for item in items:
-            item_data = item.data(Qt.UserRole)
+            item_data = item.data(Qt.ItemDataRole.UserRole)
             if item_data == data:
                 return list_widget.row(item)
 

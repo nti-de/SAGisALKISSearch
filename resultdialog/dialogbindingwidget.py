@@ -1,8 +1,8 @@
 from typing import Optional
 
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtSql import QSqlQueryModel
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QTableView, QHeaderView, QFrame, QSizePolicy
+from qgis.PyQt.QtCore import Qt, QSize
+from qgis.PyQt.QtSql import QSqlQueryModel
+from qgis.PyQt.QtWidgets import QVBoxLayout, QLabel, QTableView, QHeaderView, QFrame, QSizePolicy
 
 from .. import commonfunctions
 from .. import loggerutils
@@ -20,9 +20,9 @@ class DialogBindingWidget(QFrame):
         self.setLayout(QVBoxLayout())
         self.layout().setSpacing(0)
         self.caption_label = QLabel()
-        self.caption_label.setAlignment(Qt.AlignHCenter)
+        self.caption_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
-        self.table_view = QTableView()
+        self.table_view = QTableView(self)
         self.table_view.verticalHeader().setVisible(False)
         self.table_view.setAlternatingRowColors(True)
         self.table_view.horizontalHeader().setStyleSheet("::section { background-color: #edf5ff }")
@@ -34,7 +34,7 @@ class DialogBindingWidget(QFrame):
         self.binding: Optional[SagisGnDlgConfig.Container.InfoTemplate.Panels.Panel.Bindings] = None
         self.input_data = {}
 
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
     def sizeHint(self) -> QSize:
         left = self.layout().contentsMargins().left()
@@ -49,7 +49,7 @@ class DialogBindingWidget(QFrame):
         if caption:
             self.caption_label.setText(caption)
             if self.layout().indexOf(self.caption_label) == -1:
-                self.layout().insertWidget(0, self.caption_label, Qt.AlignHCenter)
+                self.layout().insertWidget(0, self.caption_label, Qt.AlignmentFlag.AlignHCenter)
         else:
             self.caption_label.setText("")
             self.layout().removeWidget(self.caption_label)
@@ -59,7 +59,7 @@ class DialogBindingWidget(QFrame):
         self.binding = binding
 
     def populate(self):
-        self.table_view.setModel(QSqlQueryModel())
+        self.table_view.setModel(QSqlQueryModel(self))
         if not self.input_data:
             return
 
@@ -83,8 +83,8 @@ class DialogBindingWidget(QFrame):
         # Hide if there are no results
         self.setVisible(self.table_view.model().rowCount() > 0)
         self.rename_columns()
-        self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.table_view.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.table_view.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.resize_table_to_content()
 
     def update_input_data(self, input_data: dict):
@@ -111,12 +111,12 @@ class DialogBindingWidget(QFrame):
         def get_logical_index(text: str):
             # Look for exact match
             for i in range(self.table_view.model().columnCount()):
-                if self.table_view.model().headerData(i, Qt.Horizontal, Qt.DisplayRole) == text:
+                if self.table_view.model().headerData(i, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole) == text:
                     return i
 
-            # Look for case insensitive match
+            # Look for case-insensitive match
             for i in range(self.table_view.model().columnCount()):
-                if self.table_view.model().headerData(i, Qt.Horizontal, Qt.DisplayRole).lower() == text.lower():
+                if self.table_view.model().headerData(i, Qt.Orientation.Horizontal, Qt.ItemDataRole.DisplayRole).lower() == text.lower():
                     return i
 
             return -1
@@ -135,7 +135,7 @@ class DialogBindingWidget(QFrame):
                 header.moveSection(visual_index, 0)
 
             # Rename header
-            self.table_view.model().setHeaderData(logical_index, Qt.Horizontal, header_text.to, Qt.DisplayRole)
+            self.table_view.model().setHeaderData(logical_index, Qt.Orientation.Horizontal, header_text.to, Qt.ItemDataRole.DisplayRole)
 
             shown_columns.append(logical_index)
 

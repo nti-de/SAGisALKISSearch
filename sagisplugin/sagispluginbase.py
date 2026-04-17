@@ -1,5 +1,5 @@
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMenu, QToolBar
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QAction, QMenu, QToolBar
 
 
 class SagisPluginBase:

@@ -1,8 +1,8 @@
 import os
 import webbrowser
 
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QDialog
+from qgis.PyQt.QtCore import pyqtSignal
+from qgis.PyQt.QtWidgets import QDialog
 from qgis.PyQt import uic, QtGui
 
 from .excelexportdialog import ExcelExportDialog
@@ -23,6 +23,19 @@ class GenericDialog(QDialog, FORM_CLASS):
     def __init__(self, config_context: ConfigContext, result_list: list[dict], current_index: int = 0, parent=None):
         super().__init__(parent)
         self.setupUi(self)
+
+        self.setStyleSheet("""
+            QLabel {
+                color: black;
+            }
+            QTableView {
+                color: black;
+            }
+            QHeaderView::section {
+                color: black;
+            }
+        """)
+
         self.context = config_context
         self.result_list = result_list
 
@@ -177,7 +190,7 @@ class GenericDialog(QDialog, FORM_CLASS):
         )
         dlg.setModal(True)
         dlg.show()
-        dlg.exec_()
+        dlg.exec()
 
     def sagisweb_clicked(self):
         current_object_pk_value = utils.get_case_insensitive(self.current_object(), self.context.primary_key_name)

@@ -1,10 +1,8 @@
-import pathlib
-import sys
 from typing import Optional
 
 import pandas
 import pandas as pd
-from PyQt5.QtCore import QDateTime, QLocale
+from qgis.PyQt.QtCore import QDateTime, QLocale
 from qgis.core import QgsMessageLog, QgsTask
 
 from . import SagisWorksheetType

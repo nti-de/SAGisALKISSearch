@@ -1,6 +1,6 @@
 from typing import Any
 
-from qgis.core import QgsDataSourceUri, QgsMapLayer, QgsProject, QgsVectorLayer, QgsWkbTypes
+from qgis.core import QgsDataSourceUri, QgsProject, QgsVectorLayer, QgsWkbTypes
 
 from .alkisdatasource import AlkisDataSourcePostgres, AlkisDataSourceType, TableInfo
 
@@ -20,9 +20,9 @@ class SagisConverter(AlkisDataSourcePostgres):
             "ax_gebaeude": TableInfo("ax_gebaeude", "Gebäude", "geom", "fid"),
             "ax_flurstueck_tbl": TableInfo("ax_flurstueck_tbl", "Beschriftung Flurstück", "geom", "fid"),
             "ax_flurstueck_oa_line": TableInfo("ax_flurstueck_oa", "ALKIS_BB - AX_Flurstueck_oa", "geom", "fid",
-                                               type=QgsWkbTypes.LineString),
+                                               type=QgsWkbTypes.Type.LineString),
             "ax_flurstueck_oa_arrowhead": TableInfo("ax_flurstueck_oa", "ALKIS_BB - AX_Flurstueck_oa", "geom", "fid",
-                                                    type=QgsWkbTypes.Point),
+                                                    type=QgsWkbTypes.Type.Point),
             "ax_gebaeude_tbl": TableInfo("ax_gebaeude_tbl", "Beschriftung Hausnummer", "geom", "fid"),
             "ax_lagebezohnehnr_tbl": TableInfo("ax_lagebezohnehnr_tbl", "Straßennamen", "geom", "fid")
         }

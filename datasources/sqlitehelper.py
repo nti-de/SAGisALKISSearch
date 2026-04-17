@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from PyQt5.QtSql import QSqlDatabase
+from qgis.PyQt.QtSql import QSqlDatabase
 from qgis.core import QgsDataSourceUri
 
 from . import databasehelper

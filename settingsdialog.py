@@ -1,7 +1,7 @@
 import configparser
 import os
 
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QMessageBox
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QMessageBox
 from qgis.PyQt import uic, QtGui
 from qgis.core import QgsSettings
 
@@ -30,7 +30,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
 
         self.leUser.setPlaceholderText(DEFAULT_USER)
 
-        self.bAddLayers = self.buttonBox.addButton("Speichern und Layer hinzufügen", QDialogButtonBox.ActionRole)
+        self.bAddLayers = self.buttonBox.addButton("Speichern und Layer hinzufügen", QDialogButtonBox.ButtonRole.ActionRole)
         self.bAddLayers.clicked.connect(self.add_layers_clicked)
 
         self.cbConnections.currentTextChanged.connect(self.connection_changed)
