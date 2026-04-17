@@ -53,8 +53,8 @@ def get_formatted_string(val, precision=3, decimals_if_needed=True) -> str:
         return result
     try:
         # result = str(round(float(val), precision))
-        result = "{:.{}f}".format(float(val), precision) if precision > 0 else f"{result}"
-        result = result.rstrip("0").rstrip(".")if decimals_if_needed else result
+        result = "{:.{}f}".format(float(val), precision) if precision >= 0 else f"{val}"
+        result = result.rstrip("0").rstrip(".") if decimals_if_needed and "." in result else result
         result = result.replace(".", ",")
     except:
         pass

@@ -16,6 +16,7 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
         self.config_file = "resources/config/GenericDialog/Configuration/AX_FLURSTUECK_SQLITE.xml"
         self.flurstueck_primary_key = "fid"
 
+        # Geometry columns are set in the database itself (table: 'geometry_columns').
         self.tables = {
             "ax_flurstueck": TableInfo("ax_flurstueck", "Flurstücke", "geom", "fid"),
             "ax_gebaeude": TableInfo("ax_gebaeude", "Gebäude", "geom", "fid"),
@@ -53,11 +54,11 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
 
         layer = QgsVectorLayer(uri, table.table_name, "ogr")
         layer.setName(table.caption)
+        layer.setSubsetString("LZE IS NULL")
 
         if table.display_expression:
             layer.setDisplayExpression(table.display_expression)
 
-        layer.setFlags(layer.flags() & ~QgsMapLayer.Removable)
         QgsProject.instance().addMapLayer(layer, addToLegend=False)
         self.group_basemap.insertLayer(0, layer)
 
@@ -161,24 +162,22 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
     def search_flurstuecke(self, fsk="", gmk_gmn="", fln="", fsn_zae="", fsn_nen="") -> list[dict]:
         sql = """SELECT FID,
         (ifnull(gemarkung, '')  || '-' || ifnull(flurnummer, '')  || '-' || ifnull(flurstuecksnummer_zaehler, '')  || '-' || ifnull(flurstuecksnummer_nenner, ''))  AS CAPTION
-        FROM AX_FLURSTUECK"""
-
-        if fsk:
-            sql += f" WHERE flurstueckskennzeichen LIKE '{fsk}'"
-            return self.select_into_dict_list(sql, self.database)
+        FROM AX_FLURSTUECK WHERE LZE IS NULL"""
 
         def add_condition(sql_: str, column: str, value: str, is_first: bool):
             if not value:
                 return sql_, is_first
 
-            sql_ += " WHERE " if is_first else " AND "
-            sql_ += f"{column} = '{value}'"
+            sql_ += f" AND {column} = '{value}'"
             return sql_, False
 
-        sql, first = add_condition(sql, "gemarkung", gmk_gmn, True)
-        sql, first = add_condition(sql, "flurnummer", fln, first)
-        sql, first = add_condition(sql, "flurstuecksnummer_zaehler", fsn_zae, first)
-        sql, first = add_condition(sql, "flurstuecksnummer_nenner", fsn_nen, first)
+        if fsk:
+            sql += f" AND flurstueckskennzeichen LIKE '%{fsk}%'"
+        else:
+            sql, first = add_condition(sql, "gemarkung", gmk_gmn, True)
+            sql, first = add_condition(sql, "flurnummer", fln, first)
+            sql, first = add_condition(sql, "flurstuecksnummer_zaehler", fsn_zae, first)
+            sql, first = add_condition(sql, "flurstuecksnummer_nenner", fsn_nen, first)
 
         sql += " ORDER BY flurstueckskennzeichen"
 

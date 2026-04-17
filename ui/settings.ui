@@ -114,6 +114,16 @@
          <item>
           <widget class="QgsFileWidget" name="mQgsFileWidget"/>
          </item>
+         <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Verwendete Geometriespalten werden in der Tabelle 'geometry_columns' der SQLite-Datenbank festgelegt.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>

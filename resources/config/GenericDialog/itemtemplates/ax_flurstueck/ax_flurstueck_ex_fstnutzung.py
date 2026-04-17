@@ -42,7 +42,7 @@ class AX_FLURSTUECK_EX_FSTNUTZUNG(DialogItem):
 
     def set_label_texts(self):
         self.labelAnteilAmtlich1.setText(
-            f"Anteilige Fläche basierend auf Amtlicher Flurstücksfläche von "
+            f"Anteilige Fläche basierend auf amtlicher Flurstücksfläche von "
             f"{commonfunctions.get_formatted_string(self.get_value('amtlicheflaeche'))}"
             f" m²"
         )
@@ -55,7 +55,7 @@ class AX_FLURSTUECK_EX_FSTNUTZUNG(DialogItem):
         )
 
         self.labelAnteilGeometrisch1.setText(
-            f"Anteilige Fläche basierend auf Geometrischer Flurstücksfläche von "
+            f"Anteilige Fläche basierend auf geometrischer Flurstücksfläche von "
             f"{commonfunctions.get_formatted_string(self.get_value('x_area_source'))}"
             f" m²"
         )

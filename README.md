@@ -21,7 +21,7 @@ Unterstützt werden mit dem [SAGis ALKIS](https://www.nti-group.com/de/produkte/
 
 ### Installation
 
-SAGis Excel Export kann über das QGIS-Plugin Repository heruntergeladen werden.
+SAGis ALKIS Suche kann über das QGIS-Plugin Repository heruntergeladen werden.
 
 Für eine erfolgreiche Ausführung des Programms müssen zudem folgende Python-Komponenten installiert werden:
 - pandas (getestet mit Version 2.0.2)

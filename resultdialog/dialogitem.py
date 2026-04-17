@@ -33,7 +33,7 @@ class DialogItem(QFrame):
 
     def get_value(self, key: str, default="") -> Any:
         value = utils.get_case_insensitive(self.data, key, default)
-        return value if value else default
+        return value if value is not None else default
 
     def bind_table_view(self, binding: SagisGnDlgConfig.Container.InfoTemplate.Panels.Panel.Bindings):
         if not binding.active:

@@ -38,7 +38,7 @@ class ItemBase(QFrame):
 
     def get_value(self, key: str, default="") -> Any:
         value = self.data.get(key, default)
-        return value if value else default
+        return value if value is not None else default
 
     def bind_tableviews(self):
         for binding in self.panel.bindings:

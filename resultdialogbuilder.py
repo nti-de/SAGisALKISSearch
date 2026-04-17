@@ -15,12 +15,14 @@ from .sagisgndlgconfig.sagis_gn_dlg_config import SagisGnDlgConfig
 class ResultDialogBuilder:
     result_dialogs = []
 
-    def __init__(self, result_list: list[dict], class_name: str, primary_key_name: str, datasource: DataSource, config_path: str):
+    def __init__(self, result_list: list[dict], class_name: str, primary_key_name: str,
+                 datasource: DataSource, config_path: str, current_index: int = 0):
         self.result_list = result_list
         self.class_name = class_name
         self.primary_key_name = primary_key_name  # Could also come from datasource.flurstueck_primary_key
         self.datasource = datasource
         self.config_path = config_path
+        self.current_index = current_index
 
         self.config: Optional[SagisGnDlgConfig] = None
         self.valid = False
@@ -60,7 +62,8 @@ class ResultDialogBuilder:
             primary_key_name=self.primary_key_name,
             result_layer=result_layer
         )
-        dlg = GenericDialog(context, self.result_list.copy())
+
+        dlg = GenericDialog(context, self.result_list.copy(), current_index=self.current_index)
         self.result_dialogs.append(dlg)
         dlg.closed.connect(lambda: self.result_dialogs.remove(dlg))
         dlg.show()

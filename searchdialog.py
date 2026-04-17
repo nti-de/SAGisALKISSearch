@@ -80,6 +80,8 @@ class SearchDialog(QDialog, FORM_CLASS):
         self.unselect_button.setVisible(False)
         self.unselect_button.clicked.connect(searchresulthandler.unselect_flurstuecke)
 
+        self.result_list_widget: Optional[QListWidget] = None
+
         self.rejected.connect(self.close_database)
 
         self.datasource: Optional[AlkisDataSource] = None
@@ -298,18 +300,19 @@ class SearchDialog(QDialog, FORM_CLASS):
         count_label = QLabel(
             f"Ihre Suche lieferte {len(results) if len(results) > 0 else 'keine'} Ergebnis{'se' if len(results) != 1 else ''}."
         )
-        list_widget = QListWidget()
+        self.result_list_widget = QListWidget()
         layout.addWidget(count_label)
-        layout.addWidget(list_widget)
+        layout.addWidget(self.result_list_widget)
 
         for r in results:
             caption = utils.get_case_insensitive(r, "caption", "-")
             fid = utils.get_case_insensitive(r, "fid")
-            item = QListWidgetItem(caption, list_widget)
+            item = QListWidgetItem(caption, self.result_list_widget)
             item.setData(Qt.UserRole, fid)
             item.setToolTip("Suchergebnis in der Karte zeigen.")
+
         if layer:
-            list_widget.itemClicked.connect(lambda i: searchresulthandler.highlight_result(layer, i.data(Qt.UserRole)))
+            self.result_list_widget.itemClicked.connect(lambda i: searchresulthandler.highlight_result(layer, i.data(Qt.UserRole)))
 
         self.open_dialog_button.setEnabled(len(results) > 0)
         self.unselect_button.setEnabled(len(results) > 0)
@@ -324,11 +327,17 @@ class SearchDialog(QDialog, FORM_CLASS):
         if not self.datasource.connection_success:
             loggerutils.log_error(f"Datenbankfehler:\n{self.datasource.error_text}")
             return
+
+        index = 0
+        if self.result_list_widget and self.result_list_widget.currentRow() >= 0:
+            index = self.result_list_widget.currentRow()
+
         dlg_builder = ResultDialogBuilder(
             self.flurstueck_results,
             self.datasource.f_class_name,
             self.datasource.flurstueck_primary_key,
             self.datasource,
-            self.datasource.config_file
+            self.datasource.config_file,
+            current_index=index
         )
         dlg_builder.build()

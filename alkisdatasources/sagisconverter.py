@@ -100,10 +100,6 @@ class SagisConverter(AlkisDataSourcePostgres):
          ) AS CAPTION
         FROM AX_FLURSTUECK"""
 
-        if fsk:
-            sql += f" WHERE flurstueckskennzeichen LIKE '{fsk}'"
-            return self.select_into_dict_list(sql, self.database)
-
         def add_condition(sql_: str, column: str, value: str, is_first: bool):
             if not value:
                 return sql_, is_first
@@ -112,10 +108,15 @@ class SagisConverter(AlkisDataSourcePostgres):
             sql_ += f"{column} = '{value}'"
             return sql_, False
 
-        sql, first = add_condition(sql, "gemarkung", gmk_gmn, True)
-        sql, first = add_condition(sql, "flurnummer", fln, first)
-        sql, first = add_condition(sql, "flurstuecksnummer_zaehler", fsn_zae, first)
-        sql, first = add_condition(sql, "flurstuecksnummer_nenner", fsn_nen, first)
+
+        if fsk:
+            sql += f" WHERE flurstueckskennzeichen LIKE '%{fsk}%'"
+            return self.select_into_dict_list(sql, self.database)
+        else:
+            sql, first = add_condition(sql, "gemarkung", gmk_gmn, True)
+            sql, first = add_condition(sql, "flurnummer", fln, first)
+            sql, first = add_condition(sql, "flurstuecksnummer_zaehler", fsn_zae, first)
+            sql, first = add_condition(sql, "flurstuecksnummer_nenner", fsn_nen, first)
 
         sql += " ORDER BY flurstueckskennzeichen"
 
@@ -146,7 +147,6 @@ class SagisConverter(AlkisDataSourcePostgres):
         if table.display_expression:
             layer.setDisplayExpression(table.display_expression)
 
-        layer.setFlags(layer.flags() & ~QgsMapLayer.Removable)
         QgsProject.instance().addMapLayer(layer, addToLegend=False)
         self.group_basemap.insertLayer(0, layer)
 

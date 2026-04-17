@@ -66,6 +66,19 @@
         </property>
        </widget>
       </item>
+      <item>
+       <widget class="QSpinBox" name="spinBoxCurrentIndex">
+        <property name="toolTip">
+         <string>Aktueller Datensatz</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="buttonSymbols">
+         <enum>QAbstractSpinBox::NoButtons</enum>
+        </property>
+       </widget>
+      </item>
       <item alignment="Qt::AlignHCenter">
        <widget class="QLabel" name="labelIndex">
         <property name="sizePolicy">
@@ -74,8 +87,11 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="toolTip">
+         <string>Anzahl der Datensätze</string>
+        </property>
         <property name="text">
-         <string>0/0</string>
+         <string>/ 0</string>
         </property>
         <property name="alignment">
          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
