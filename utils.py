@@ -17,11 +17,11 @@ def get_case_insensitive(dictionary: dict, key, default=None) -> Any:
 def create_datasource() -> Optional[AlkisDataSource]:
     datasource_type = settings.datasourcetype()
     if datasource_type == AlkisDataSourceType.SAGisPgSql:
-        uri = postgreshelper.create_uri(settings.connection(), settings.user(), settings.password())
-        datasource = SagisConverter(uri)
+        connection = postgreshelper.get_connection(settings.connection())
+        datasource = SagisConverter(connection)
     elif datasource_type == AlkisDataSourceType.SAGisSqlite:
-        uri = sqlitehelper.create_uri(settings.file())
-        datasource = SqliteSagisConverter(uri)
+        connection = sqlitehelper.get_connection(settings.file())
+        datasource = SqliteSagisConverter(connection)
     else:
         datasource = None
     return datasource

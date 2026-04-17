@@ -1,8 +1,6 @@
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QLabel, QFormLayout
 
-from ...... import commonfunctions
-from ......resultdialog.dialogbindingwidget import DialogBindingWidget
 from ......resultdialog.dialogitem import DialogItem
 from ......sagisgndlgconfig.configcontext import ConfigContext
 from ......sagisgndlgconfig.sagis_gn_dlg_config import SagisGnDlgConfig
@@ -27,7 +25,7 @@ class V_LAGEBEZEICHNUNG_FS(DialogItem):
         self.layout().addRow("Kreis / Region:", self.labelKreisRegion)
         self.layout().addRow("Gemeinde:", self.labelGemeinde)
         self.layout().addRow("Ortsteil:", self.labelOrtsteil)
-        self.layout().addRow("Strasse:", self.labelStrasse)
+        self.layout().addRow("Straße:", self.labelStrasse)
         self.layout().addRow("Hausnummer:", self.labelHausnummer)
         self.layout().addRow("Zusatz zur Lagebezeichnung:", self.labelZusatz)
 

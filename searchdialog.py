@@ -82,8 +82,6 @@ class SearchDialog(QDialog, FORM_CLASS):
 
         self.result_list_widget: Optional[QListWidget] = None
 
-        self.rejected.connect(self.close_database)
-
         self.datasource: Optional[AlkisDataSource] = None
         self.last_connection_name = settings.connection()
         self.last_database_type = settings.datasourcetype()
@@ -100,14 +98,6 @@ class SearchDialog(QDialog, FORM_CLASS):
         if settings.datasourcetype() != self.last_database_type or settings.connection() != self.last_connection_name:
             self.set_database(settings.datasourcetype())
         self.check_datasource_types()
-
-    def closeEvent(self, e: QtGui.QCloseEvent) -> None:
-        super().closeEvent(e)
-        self.close_database()
-
-    def close_database(self):
-        if self.datasource.database:
-            self.datasource.database.close()
 
     def set_database(self, datasource_type: AlkisDataSourceType):
         self.datasource = None
@@ -127,7 +117,7 @@ class SearchDialog(QDialog, FORM_CLASS):
 
         self.datasource = utils.create_datasource()
 
-        if not self.datasource or not self.datasource.database or not self.datasource.connection_success:
+        if not self.datasource or not self.datasource.connection or not self.datasource.connection_success:
             message = "Datenbankfehler:\nDatenbankverbindung fehlgeschlagen"
             message += f" -> {self.datasource.error_text}" if self.datasource.error_text else ""
             loggerutils.log_error(message)

@@ -64,9 +64,9 @@ def flurstueck_search(primary_key_values: list[int]) -> Optional[QgsVectorLayer]
         return
 
     layer_id, ok = QgsProject.instance().readEntry(PROJECT_ENTRY_SCOPE, "flurstueck_result_layer")
-    layer = None
+    layer: Optional[QgsVectorLayer] = None
     if ok:
-        layer: QgsVectorLayer = QgsProject.instance().mapLayer(layer_id)
+        layer = QgsProject.instance().mapLayer(layer_id)
     if not layer:
         iface.messageBar().pushMessage(title="SAGis ALKIS Suche",
                                        text="Flurstücklayer existiert nicht",

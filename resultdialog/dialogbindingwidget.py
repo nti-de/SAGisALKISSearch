@@ -6,6 +6,8 @@ from qgis.PyQt.QtWidgets import QVBoxLayout, QLabel, QTableView, QHeaderView, QF
 
 from .. import commonfunctions
 from .. import loggerutils
+from ..datasources import databasehelper
+from ..datasources.SqlResultModel import SqlResultModel
 from ..sagisgndlgconfig import sagisgndlgconfig_utils
 from ..sagisgndlgconfig.configcontext import ConfigContext
 from ..sagisgndlgconfig.sagis_gn_dlg_config import SagisGnDlgConfig
@@ -45,7 +47,6 @@ class DialogBindingWidget(QFrame):
         return QSize(width, height)
 
     def set_caption(self, caption: Optional[str]):
-        # if isinstance(caption, str):
         if caption:
             self.caption_label.setText(caption)
             if self.layout().indexOf(self.caption_label) == -1:
@@ -66,12 +67,9 @@ class DialogBindingWidget(QFrame):
         if not self.context or not self.binding:
             return
 
-        db = self.context.datasource.database
-        if not db or not self.binding.sql:
+        connection = self.context.datasource.connection
+        if not connection or not self.binding.sql:
             return
-
-        if not db.isOpen():
-            db.open()
 
         sql = sagisgndlgconfig_utils.replace_schema_placeholder(self.binding.sql, self.context.config)
         success, sql = commonfunctions.insert_dict_values_into_string(sql, self.input_data)
@@ -79,7 +77,9 @@ class DialogBindingWidget(QFrame):
             loggerutils.log_error(f"Fehler (DialogBindingWidget) -> {self.binding.caption}:\nAbfrageergebnis enthält nicht '{sql}'")
             return
 
-        self.table_view.model().setQuery(sql, db)
+        data = databasehelper.select_into_dict_list(sql, connection)[0]
+        model = SqlResultModel(data)
+        self.table_view.setModel(model)
         # Hide if there are no results
         self.setVisible(self.table_view.model().rowCount() > 0)
         self.rename_columns()
@@ -102,7 +102,7 @@ class DialogBindingWidget(QFrame):
             total_width += self.table_view.columnWidth(column)
         self.table_view.setFixedWidth(total_width)
 
-    def rename_columns(self, sort_by_header_text=False):
+    def rename_columns(self):
         """If header texts are provided, only the included columns are shown, the rest will be hidden."""
 
         if not self.binding.header_text or not self.table_view.model():
@@ -129,10 +129,9 @@ class DialogBindingWidget(QFrame):
                 continue
 
             # Change position
-            if sort_by_header_text:
-                header = self.table_view.horizontalHeader()
-                visual_index = header.visualIndex(logical_index)
-                header.moveSection(visual_index, 0)
+            header = self.table_view.horizontalHeader()
+            visual_index = header.visualIndex(logical_index)
+            header.moveSection(visual_index, 0)
 
             # Rename header
             self.table_view.model().setHeaderData(logical_index, Qt.Orientation.Horizontal, header_text.to, Qt.ItemDataRole.DisplayRole)

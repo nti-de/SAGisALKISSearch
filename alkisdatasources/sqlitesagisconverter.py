@@ -1,14 +1,14 @@
 from typing import Any
 
 from qgis.PyQt.QtXml import QDomDocument
-from qgis.core import QgsDataSourceUri, QgsProject, QgsVectorLayer
+from qgis.core import QgsAbstractDatabaseProviderConnection, QgsProject, QgsVectorLayer
 
 from .alkisdatasource import AlkisDataSourceSqlite, AlkisDataSourceType, TableInfo
 
 
 class SqliteSagisConverter(AlkisDataSourceSqlite):
-    def __init__(self, uri: QgsDataSourceUri):
-        super().__init__(uri)
+    def __init__(self, connection: QgsAbstractDatabaseProviderConnection):
+        super().__init__(connection)
 
         # AlkisDataSource
         self.f_class_name = "AX_FLURSTUECK"
@@ -47,7 +47,7 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
 
         # uri = f'dbname=\'{self.uri.database()}\' key=\'{table.primary_key_column}\' table="{table.table_name}" ({table.geom_column})'
 
-        uri = f"{self.uri.database()}|layername={table.table_name}"
+        uri = f"{self.connection.uri()}|layername={table.table_name}"
 
         if table.type:
             uri += f"|geometrytype={table.type}"
@@ -60,7 +60,8 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
             layer.setDisplayExpression(table.display_expression)
 
         QgsProject.instance().addMapLayer(layer, addToLegend=False)
-        self.group_basemap.insertLayer(0, layer)
+        tree_layer = self.group_basemap.insertLayer(0, layer)
+        tree_layer.setExpanded(False)
 
         # Load style. Does not happen automatically.
         self.load_style(table, layer)
@@ -103,7 +104,7 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
                 WHERE (a.SNR = '4107' AND Upper(a.ART) IN ('STRASSE', 'WEG', 'PLATZ'))
                 ORDER BY LABEL_TEXT asc"""
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql, self.connection)
 
     def get_municipalities(self) -> list[dict]:
         sql = """SELECT a.GEMEINDEKENNZEICHEN as KEY, a.BEZEICHNUNG as VALUE
@@ -114,7 +115,7 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
                     WHERE a.GEMEINDEKENNZEICHEN = b.KEY and a.LZE is NULL
                 ORDER BY a.BEZEICHNUNG ASC"""
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql, self.connection)
 
     def get_streets(self, municipality_id: int) -> list[dict]:
         sql = f"""SELECT a.FID, a.SCHLUESSEL as KEY, a.BEZEICHNUNG as VALUE
@@ -125,7 +126,7 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
                 HAVING count(b.FID) > 0
                 ORDER BY VALUE ASC"""
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql, self.connection)
 
     def get_numbers(self, street_key: str) -> list[dict]:
         sql = f"""SELECT GEB.FID as KEY, HN.VALUE as VALUE
@@ -138,13 +139,13 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
                 JOIN AX_GEBAEUDE GEB ON BEZ.ID=GEB.ID
                 ORDER BY VALUE"""
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql, self.connection)
 
     def get_bundesland(self) -> Any:
         """Returns first distinct Bundesland used in table 'ax_flurstueck'."""
 
         sql = """select distinct(substr(gemarkung, 1, 2)) as bl from ax_flurstueck"""
-        result = self.select_into_dict_list(sql, self.database)
+        result = self.select_into_dict_list(sql, self.connection)
         if not result:
             return ""
         return result[0].get("bl", "")
@@ -157,7 +158,7 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
                 HAVING count(b.FID) > 0
                 ORDER BY a.BEZEICHNUNG ASC"""
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql, self.connection)
 
     def search_flurstuecke(self, fsk="", gmk_gmn="", fln="", fsn_zae="", fsn_nen="") -> list[dict]:
         sql = """SELECT FID,
@@ -181,4 +182,4 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
 
         sql += " ORDER BY flurstueckskennzeichen"
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql, self.connection)

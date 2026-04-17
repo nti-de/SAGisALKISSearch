@@ -28,12 +28,9 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.rbSagisPostgres.toggled.connect(self.datasource_type_changed)
         self.rbSagisSqlite.toggled.connect(self.datasource_type_changed)
 
-        self.leUser.setPlaceholderText(DEFAULT_USER)
-
         self.bAddLayers = self.buttonBox.addButton("Speichern und Layer hinzufügen", QDialogButtonBox.ButtonRole.ActionRole)
         self.bAddLayers.clicked.connect(self.add_layers_clicked)
 
-        self.cbConnections.currentTextChanged.connect(self.connection_changed)
         self.accepted.connect(self.save_settings)
 
         self.read_ini()
@@ -64,13 +61,6 @@ class SettingsDialog(QDialog, FORM_CLASS):
             self.groupBoxConnection.setEnabled(False)
             self.groupBoxFile.setEnabled(False)
 
-    def connection_changed(self, connection_name: str):
-        s = QgsSettings()
-        user = s.value(f"{POSTGRESQL_CONNECTION_PATH}/{connection_name}/username", "")
-        password = s.value(f"{POSTGRESQL_CONNECTION_PATH}/{connection_name}/password", "")
-        self.leUser.setText(user)
-        self.lePassword.setText(password)
-
     def save_settings(self):
         # Datasource type
         if self.rbSagisPostgres.isChecked():
@@ -83,9 +73,6 @@ class SettingsDialog(QDialog, FORM_CLASS):
 
         # Connection
         settings.set_connection(self.cbConnections.currentText())
-        user = self.leUser.text() if self.leUser.text() else DEFAULT_USER
-        settings.set_user(user)
-        settings.set_password(self.lePassword.text())
 
         # SQLite file path
         settings.set_file(self.mQgsFileWidget.filePath())
@@ -99,8 +86,6 @@ class SettingsDialog(QDialog, FORM_CLASS):
         if saved_connection in self.connection_names:
             index = self.cbConnections.findText(saved_connection)
             self.cbConnections.setCurrentIndex(index)
-            self.leUser.setText(settings.user())
-            self.lePassword.setText(settings.password())
 
         # SQLite file path
         self.mQgsFileWidget.setFilePath(settings.file())

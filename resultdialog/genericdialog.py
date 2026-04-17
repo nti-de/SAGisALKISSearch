@@ -65,7 +65,6 @@ class GenericDialog(QDialog, FORM_CLASS):
 
     def closeEvent(self, e: QtGui.QCloseEvent) -> None:
         super().closeEvent(e)
-        self.context.datasource.close_and_remove_connection()
         self.closed.emit()
 
     def showEvent(self, e: QtGui.QShowEvent) -> None:
@@ -140,7 +139,7 @@ class GenericDialog(QDialog, FORM_CLASS):
         sql = sagisgndlgconfig_utils.replace_schema_placeholder(panel.query.sql, self.context.config)
         sql = sagisgndlgconfig_utils.insert_object_id(sql, current_object_id)
 
-        data = self.context.datasource.select_into_dict_list(sql, null_value_to_none=True)
+        data = self.context.datasource.select_into_dict_list(sql)
         if not data and self.context.datasource.error_text:
             loggerutils.log_error(f"Fehler (GenericDialog) -> {panel.caption} ({panel.query.name}):\n{self.context.datasource.error_text}")
         data = data if data else []

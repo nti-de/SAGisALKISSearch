@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Optional
 
-from qgis.core import QgsDataSourceUri, QgsLayerTreeGroup, QgsProject
+from qgis.core import QgsAbstractDatabaseProviderConnection, QgsLayerTreeGroup, QgsProject
 
 from ..datasources.datasource import DataSource
 from ..datasources.postgresdatasource import PostgresDataSource
@@ -30,8 +30,8 @@ class TableInfo:
 class AlkisDataSource(DataSource, ABC):
     PROJECT_ENTRY_SCOPE = "sagis_alkis_search"
 
-    def __init__(self, uri: QgsDataSourceUri):
-        super().__init__(uri)
+    def __init__(self, connection: QgsAbstractDatabaseProviderConnection):
+        super().__init__(connection)
 
         # Set during initialization
         self.f_class_name = ""

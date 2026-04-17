@@ -42,30 +42,6 @@ def set_connection(value: Optional[str]) -> None:
     save_setting("connection", value)
 
 
-def user() -> str:
-    return load_setting("user", str, "")
-
-
-def set_user(value: Optional[str]) -> None:
-    save_setting("user", value)
-
-
-def password() -> str:
-    return load_setting("password", str, "")
-
-
-def set_password(value: Optional[str]) -> None:
-    save_setting("password", value)
-
-
-def schema() -> str:
-    return load_setting("schema", str, "")
-
-
-def set_schema(value: Optional[str]) -> None:
-    save_setting("schema", value)
-
-
 def file() -> str:
     return load_setting("file", str, "")
 

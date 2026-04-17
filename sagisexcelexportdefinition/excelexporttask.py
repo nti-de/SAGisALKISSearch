@@ -30,7 +30,7 @@ class ExcelExportTask(QgsTask):
 
         if not self.context.config:
             return False
-        if not self.context.datasource.database:
+        if not self.context.datasource.connection:
             return False
         if not self.object_ids:
             return False
@@ -63,7 +63,7 @@ class ExcelExportTask(QgsTask):
 
             return True
         except Exception as ex:
-            self.error = ex.__repr__()
+            self.error = ex
             return False
 
     # def finished(self, result: bool) -> None:
@@ -119,7 +119,7 @@ class ExcelExportTask(QgsTask):
     def get_data(self, sql: str) -> list[dict]:
         if not sql:
             return []
-        result = self.context.datasource.select_into_dict_list(sql, null_value_to_none=True)
+        result = self.context.datasource.select_into_dict_list(sql)
         if not result:
             return []
 
@@ -172,7 +172,7 @@ class ExcelExportTask(QgsTask):
                         if not alias.value:
                             continue
                         column_name = alias.column_name.lower()
-                        if column_name not in dataframe:
+                        if column_name not in dataframe.columns:
                             continue
                         col_index = dataframe.columns.get_loc(column_name)
                         worksheet.write_comment(0, col_index, alias.value, {"font_name": "Calibri", "font_size": 11})

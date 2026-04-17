@@ -1,6 +1,5 @@
 import os
 import pathlib
-import sys
 from typing import Optional
 
 from qgis.core import QgsProject
@@ -50,7 +49,7 @@ class ResultDialogBuilder:
         result_layer = QgsProject.instance().mapLayer(layer_id) if ok else None
 
         # Copy datasource
-        datasource = type(self.datasource)(self.datasource.uri)
+        datasource = type(self.datasource)(self.datasource.connection)
         if not datasource.connection_success:
             loggerutils.log_error(f"Fehler (ResultDialogBuilder):\n{datasource.error_text}")
             return

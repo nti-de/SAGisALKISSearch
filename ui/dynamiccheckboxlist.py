@@ -1,5 +1,5 @@
 from qgis.PyQt.QtCore import QTimer, pyqtSignal
-from qgis.PyQt.QtWidgets import QFrame, QGridLayout, QCheckBox, QWidget
+from qgis.PyQt.QtWidgets import QFrame, QGridLayout, QCheckBox
 
 
 class DynamicCheckBoxList(QFrame):

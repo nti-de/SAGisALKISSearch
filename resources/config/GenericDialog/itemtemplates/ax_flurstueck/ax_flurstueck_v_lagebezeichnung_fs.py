@@ -24,7 +24,7 @@ class AX_FLURSTUECK_V_LAGEBEZEICHNUNG_FS(DialogItem):
         self.layout().addRow("Kreis / Region:", self.labelKreisRegion)
         self.layout().addRow("Gemeinde:", self.labelGemeinde)
         self.layout().addRow("Ortsteil:", self.labelOrtsteil)
-        self.layout().addRow("Strasse, Hausnummer:", self.labelStrasseHausnummer)
+        self.layout().addRow("Straße, Hausnummer:", self.labelStrasseHausnummer)
         self.layout().addRow("Zusatz zur Lagebezeichnung:", self.labelZusatz)
 
         for i in range(self.layout().rowCount()):

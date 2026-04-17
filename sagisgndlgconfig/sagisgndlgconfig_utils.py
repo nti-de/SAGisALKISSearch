@@ -1,3 +1,5 @@
+from typing import Any
+
 from ..sagisgndlgconfig.sagis_gn_dlg_config import SagisGnDlgConfig
 
 
@@ -9,7 +11,7 @@ def replace_schema_placeholder(sql: str, config: SagisGnDlgConfig) -> str:
     return sql.replace(placeholder, schema)
 
 
-def insert_object_id(sql: str, object_id: any) -> str:
+def insert_object_id(sql: str, object_id: Any) -> str:
     placeholder = "{SELECTED_MAP_ITEM}"
     # Add single quotes to string
     object_id_str = f"'{object_id}'" if isinstance(object_id, str) else str(object_id)

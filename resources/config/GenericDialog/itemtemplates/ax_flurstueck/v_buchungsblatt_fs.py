@@ -1,7 +1,6 @@
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtWidgets import QLabel, QFormLayout
 
-from ...... import commonfunctions
 from ......resultdialog.dialogbindingwidget import DialogBindingWidget
 from ......resultdialog.dialogitem import DialogItem
 from ......sagisgndlgconfig.configcontext import ConfigContext

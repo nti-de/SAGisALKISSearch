@@ -56,7 +56,7 @@ class DialogTab(QScrollArea):
                 if not success:
                     return
 
-        self.data = self.context.datasource.select_into_dict_list(sql, null_value_to_none=True)
+        self.data = self.context.datasource.select_into_dict_list(sql)
         if not self.data and self.context.datasource.error_text:
             loggerutils.log_error(f"Fehler (DialogTab) -> {self.panel.caption} ({name}):\n{self.context.datasource.error_text}")
 

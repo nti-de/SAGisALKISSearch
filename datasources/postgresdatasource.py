@@ -1,48 +1,27 @@
-import uuid
-from typing import Tuple
+from qgis.core import QgsAbstractDatabaseProviderConnection
 
-from qgis.PyQt.QtSql import QSqlDatabase
-from qgis.core import QgsDataSourceUri
-
-from . import databasehelper, postgreshelper
+from . import databasehelper
 from .datasource import DataSource
 from .featuresourceprovidertype import FeatureSourceProviderType
 
 
 class PostgresDataSource(DataSource):
-    def __init__(self, uri: QgsDataSourceUri):
-        super().__init__(uri)
-        # DataSource
+    def __init__(self, connection: QgsAbstractDatabaseProviderConnection):
+        super().__init__(connection)
         self.feature_source_provider_type = FeatureSourceProviderType.PostgreSQL
 
-    def create_connection(self) -> Tuple[bool, str]:
-        database_name = "sagis_" + uuid.uuid4().hex
-        port = int(self.uri.port()) if self.uri.port() else 5432
-        success, error_text = postgreshelper.create_connection(
-            self.uri.host(), port, self.uri.database(),
-            self.uri.username(), self.uri.password(), database_name
-        )
-        if not success:
-            return False, error_text
-
-        self.database = QSqlDatabase.database(database_name)
-        self.database.setUserName(self.uri.username())
-        self.database.setPassword(self.uri.password())
-
-        return True, ""
-
-    def select_into_dict_list(self, sql: str, null_value_to_none=True) -> list[dict]:
-        result, self.error_text = databasehelper.select_into_dict_list(sql, self.database, null_value_to_none)
+    def select_into_dict_list(self, sql: str) -> list[dict]:
+        result, self.error_text = databasehelper.select_into_dict_list(sql, self.connection)
         return result
 
     def get_column_names(self, table_name: str, force_lower=False) -> list[str]:
         # PostgreSQL column names are always returned as lower.
-        result, self.error_text = postgreshelper.get_column_names_with_database(self.database, table_name)
+        result, self.error_text = databasehelper.get_column_names(self.connection, "public", table_name.lower())
         return result
 
     def get_geom_columns(self, table_name: str, force_lower=False) -> list[str]:
         # PostgreSQL column names are always returned as lower.
-        result, self.error_text = postgreshelper.get_geom_columns_with_database(table_name, self.database)
+        result, self.error_text = databasehelper.get_geom_columns(self.connection, "public", table_name.lower())
         return result
 
     def get_generic_select_statement(self, table_name: str, column_list=None) -> str:

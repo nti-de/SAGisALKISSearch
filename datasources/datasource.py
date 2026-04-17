@@ -1,31 +1,17 @@
 from abc import ABC, abstractmethod
-from typing import Optional, Tuple
-
-from qgis.PyQt.QtSql import QSqlDatabase
-from qgis.core import QgsDataSourceUri
+from qgis.core import QgsAbstractDatabaseProviderConnection
 
 from .featuresourceprovidertype import FeatureSourceProviderType
 
 
 class DataSource(ABC):
-    def __init__(self, uri: QgsDataSourceUri):
-        self.uri = uri or QgsDataSourceUri()
-        self.database: Optional[QSqlDatabase] = None
-        self.connection_success, self.error_text = self.create_connection()
-
+    def __init__(self, connection: QgsAbstractDatabaseProviderConnection):
+        self.connection = connection
+        self.connection_success, self.error_text = True, None
         self.feature_source_provider_type: FeatureSourceProviderType = FeatureSourceProviderType.Unknown
 
-    def close_and_remove_connection(self):
-        if self.database:
-            self.database.close()
-            QSqlDatabase.removeDatabase(self.database.connectionName())
-
     @abstractmethod
-    def create_connection(self) -> Tuple[bool, str]:
-        pass
-
-    @abstractmethod
-    def select_into_dict_list(self, sql: str, null_value_to_none=True) -> list[dict]:
+    def select_into_dict_list(self, sql: str) -> list[dict]:
         pass
 
     @abstractmethod

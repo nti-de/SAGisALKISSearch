@@ -2,6 +2,7 @@ import importlib
 import os
 import subprocess
 import sys
+from typing import Tuple
 
 from qgis.PyQt.QtWidgets import QMessageBox
 from qgis.core import Qgis
@@ -39,7 +40,7 @@ def check(required_packages: list[str], path_to_bundled_packages="") -> list[str
     return missing_packages
 
 
-def install(package: str) -> (bool, str):
+def install(package: str) -> Tuple[bool, str]:
     try:
         output = subprocess.check_output(["python3", "-m", "pip", "install", package], stderr=subprocess.STDOUT)
         return True, output.decode("utf-8")

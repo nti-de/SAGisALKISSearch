@@ -1,13 +1,13 @@
 from typing import Any, List
 
-from qgis.core import QgsDataSourceUri, QgsProject, QgsVectorLayer, QgsWkbTypes
+from qgis.core import QgsAbstractDatabaseProviderConnection, QgsDataSourceUri, QgsProject, QgsVectorLayer, QgsWkbTypes
 
 from .alkisdatasource import AlkisDataSourcePostgres, AlkisDataSourceType, TableInfo
 
 
 class SagisConverter(AlkisDataSourcePostgres):
-    def __init__(self, uri: QgsDataSourceUri):
-        super().__init__(uri)
+    def __init__(self, connection: QgsAbstractDatabaseProviderConnection):
+        super().__init__(connection)
 
         # AlkisDataSource
         self.f_class_name = "AX_FLURSTUECK"
@@ -36,7 +36,7 @@ class SagisConverter(AlkisDataSourcePostgres):
         WHERE (a.SNR = '4107' AND Upper(a.ART) IN ('STRASSE', 'WEG', 'PLATZ'))
         ORDER BY LABEL_TEXT asc"""
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql)
 
     def get_municipalities(self) -> list[dict]:
         sql = """SELECT a.GEMEINDEKENNZEICHEN as KEY, a.BEZEICHNUNG as VALUE
@@ -47,7 +47,7 @@ class SagisConverter(AlkisDataSourcePostgres):
             WHERE a.GEMEINDEKENNZEICHEN = b.KEY and a.LZE is NULL
         ORDER BY a.BEZEICHNUNG ASC"""
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql)
 
     def get_streets(self, municipality_id: int) -> list[dict]:
         sql = f"""SELECT a.FID, a.SCHLUESSEL as KEY, a.BEZEICHNUNG as VALUE
@@ -58,7 +58,7 @@ class SagisConverter(AlkisDataSourcePostgres):
         HAVING count(b.FID) > 0
         ORDER BY VALUE ASC"""
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql)
 
     def get_numbers(self, street_key: str) -> list[dict]:
         sql = f"""SELECT GEB.FID as KEY, HN.VALUE as VALUE
@@ -71,14 +71,14 @@ class SagisConverter(AlkisDataSourcePostgres):
         LEFT JOIN ME_BZ BEZ ON UPPER(BEZ.TABELLE) = Upper('AX_Gebaeude') AND BEZ.ZID=HN.KEY
         JOIN AX_GEBAEUDE GEB ON BEZ.ID=GEB.ID"""
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql)
 
     # Flurstück search
     def get_bundesland(self) -> Any:
         """Returns first distinct Bundesland used in table 'ax_flurstueck'."""
 
         sql = """select distinct(substr(gemarkung, 1, 2)) as bl from ax_flurstueck"""
-        result = self.select_into_dict_list(sql, self.database)
+        result = self.select_into_dict_list(sql)
         if not result:
             return ""
         return result[0].get("bl", "")
@@ -91,7 +91,7 @@ class SagisConverter(AlkisDataSourcePostgres):
         HAVING count(b.FID) > 0
         ORDER BY a.BEZEICHNUNG ASC"""
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql)
 
     def search_flurstuecke(self, fsk="", gmk_gmn="", fln="", fsn_zae="", fsn_nen="") -> list[dict]:
         sql = """SELECT
@@ -114,7 +114,7 @@ class SagisConverter(AlkisDataSourcePostgres):
 
         if fsk:
             sql += f" WHERE flurstueckskennzeichen LIKE '%{fsk}%'"
-            return self.select_into_dict_list(sql, self.database)
+            return self.select_into_dict_list(sql)
         else:
             sql, first = add_condition(sql, "gemarkung", gmk_gmn, True)
             sql, first = add_condition(sql, "flurnummer", fln, first)
@@ -123,7 +123,7 @@ class SagisConverter(AlkisDataSourcePostgres):
 
         sql += " ORDER BY flurstueckskennzeichen"
 
-        return self.select_into_dict_list(sql, self.database)
+        return self.select_into_dict_list(sql)
 
     def add_layers(self) -> None:
         super().add_layers()
@@ -137,8 +137,7 @@ class SagisConverter(AlkisDataSourcePostgres):
         self.save_result_layers()
 
     def add_layer(self, table: TableInfo):
-        # Copy uri
-        uri = QgsDataSourceUri(self.uri)
+        uri = QgsDataSourceUri(self.connection.uri())
         uri.setDataSource("public", table.table_name, table.geom_column, aKeyColumn=table.primary_key_column)
 
         if table.type:
@@ -154,7 +153,8 @@ class SagisConverter(AlkisDataSourcePostgres):
             layer.setDisplayExpression(table.display_expression)
 
         QgsProject.instance().addMapLayer(layer, addToLegend=False)
-        self.group_basemap.insertLayer(0, layer)
+        tree_layer = self.group_basemap.insertLayer(0, layer)
+        tree_layer.setExpanded(False)
 
         table.layer_id = layer.id()
 
