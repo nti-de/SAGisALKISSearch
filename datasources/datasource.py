@@ -9,6 +9,8 @@ class DataSource(ABC):
         self.connection = connection
         self.connection_success, self.error_text = True, None
         self.feature_source_provider_type: FeatureSourceProviderType = FeatureSourceProviderType.Unknown
+        self.set_layers_readonly = True
+        self.set_layers_required = False
 
     @abstractmethod
     def select_into_dict_list(self, sql: str) -> list[dict]:

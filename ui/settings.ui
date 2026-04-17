@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>484</width>
-    <height>459</height>
+    <height>530</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -92,6 +92,9 @@
          </item>
          <item>
           <widget class="QLabel" name="label_6">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="text">
             <string>Verwendete Geometriespalten werden in der Tabelle 'geometry_columns' der SQLite-Datenbank festgelegt.</string>
            </property>
@@ -101,6 +104,29 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_3">
+     <property name="title">
+      <string>Layer-Flags</string>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QCheckBox" name="checkBoxReadonly">
+        <property name="text">
+         <string>Schreibgeschützt</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBoxRequired">
+        <property name="text">
+         <string>Erforderlich</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -233,6 +259,14 @@
    <header>qgsfilewidget.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>rbSagisPostgres</tabstop>
+  <tabstop>rbSagisSqlite</tabstop>
+  <tabstop>cbConnections</tabstop>
+  <tabstop>checkBoxReadonly</tabstop>
+  <tabstop>checkBoxRequired</tabstop>
+  <tabstop>leSagiswebUrl</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

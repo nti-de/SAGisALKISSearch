@@ -58,6 +58,22 @@ def set_datasourcetype(value: Optional[AlkisDataSourceType]) -> None:
     save_setting("datasourcetype", value)
 
 
+def layers_readonly():
+    return load_setting("layers_readonly", bool, True)
+
+
+def set_layers_readonly(value: bool) -> None:
+    save_setting("layers_readonly", value)
+
+
+def layers_required():
+    return load_setting("layers_required", bool, False)
+
+
+def set_layers_required(value: bool) -> None:
+    save_setting("layers_required", value)
+
+
 def sagisweburl() -> str:
     return load_setting("sagisweburl", str, "")
 

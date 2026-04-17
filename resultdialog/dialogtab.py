@@ -80,7 +80,13 @@ class DialogTab(QScrollArea):
                 continue
             # Change alternative background color
             if index % 2 != 0:
-                item.setStyleSheet("background-color: #bfd4ee")
+                item.setStyleSheet("""
+                QFrame {
+                    background-color: #bfd4ee;
+                }
+                QLabel {
+                    color: black;
+                }""")
 
             item.populate()
             self.widget().layout().addWidget(item)
@@ -91,7 +97,7 @@ class DialogTab(QScrollArea):
 
     def add_item(self, index: int, data: dict) -> Union[DialogItem, int, None]:
         if not self.panel.item_template:
-            return
+            return None
         template = self.panel.item_template.split("\\")
         try:
             import_string = f"from ..resources.config.GenericDialog.itemtemplates.{template[-2].lower()}.{template[-1].lower()} import {template[-1]} as item_template"

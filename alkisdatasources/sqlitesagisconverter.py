@@ -1,9 +1,11 @@
-from typing import Any
+from typing import Any, Optional
 
 from qgis.PyQt.QtXml import QDomDocument
+from qgis._core import QgsCoordinateReferenceSystem
 from qgis.core import QgsAbstractDatabaseProviderConnection, QgsProject, QgsVectorLayer
 
 from .alkisdatasource import AlkisDataSourceSqlite, AlkisDataSourceType, TableInfo
+from .. import utils
 
 
 class SqliteSagisConverter(AlkisDataSourceSqlite):
@@ -29,8 +31,13 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
             "ax_lagebezohnehnr_tbl": TableInfo("ax_lagebezohnehnr_tbl", "Straßennamen", "geom", "fid")
         }
 
+        self.standard_srs_id: Optional[int] = None
+        self.standard_crs: Optional[QgsCoordinateReferenceSystem] = None
+
     def add_layers(self) -> None:
         super().add_layers()
+
+        self.get_standard_crs()
 
         for table in self.tables.values():
             self.add_layer(table)
@@ -54,16 +61,31 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
 
         layer = QgsVectorLayer(uri, table.table_name, "ogr")
         layer.setName(table.caption)
-        layer.setSubsetString("LZE IS NULL")
+
+        subset_string = "LZE IS NULL"
+        if table.table_name in ["ax_flurstueck", "ax_gebaeude"] and self.standard_srs_id:
+            subset_string += f" AND srs = {self.standard_srs_id}"
+
+        layer.setSubsetString(subset_string)
+
+        if not layer.crs().isValid() and self.standard_crs and self.standard_crs.isValid():
+            # Try to use standard CRS set in table ME_KOORDINATEnANGABEN.
+            layer.setCrs(self.standard_crs)
 
         if table.display_expression:
             layer.setDisplayExpression(table.display_expression)
+
+        if self.set_layers_readonly:
+            layer.setReadOnly(True)
+
+        if self.set_layers_required:
+            utils.set_layer_required(layer, True)
 
         QgsProject.instance().addMapLayer(layer, addToLegend=False)
         tree_layer = self.group_basemap.insertLayer(0, layer)
         tree_layer.setExpanded(False)
 
-        # Load style. Does not happen automatically.
+        # Load style. Does not always happen automatically.
         self.load_style(table, layer)
 
         table.layer_id = layer.id()
@@ -102,31 +124,35 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
         sql = """SELECT a.FID, a.LABEL_TEXT as LABEL_TEXT
                 FROM AX_LAGEBEZOHNEHNR_TBL a
                 WHERE (a.SNR = '4107' AND Upper(a.ART) IN ('STRASSE', 'WEG', 'PLATZ'))
+                AND a.LZE IS NULL
                 ORDER BY LABEL_TEXT asc"""
 
-        return self.select_into_dict_list(sql, self.connection)
+        return self.select_into_dict_list(sql)
 
     def get_municipalities(self) -> list[dict]:
         sql = """SELECT a.GEMEINDEKENNZEICHEN as KEY, a.BEZEICHNUNG as VALUE
                 FROM AX_GEMEINDE a, (
                         SELECT DISTINCT(SUBSTR(VERSCHLUESSELT, 1, (SELECT MAX(LENGTH(GEMEINDEKENNZEICHEN)) FROM AX_GEMEINDE))) as KEY
                         FROM AX_LAGEBEZEICHNUNGMITHNR
+                        WHERE LZE IS NULL
                         ) b
                     WHERE a.GEMEINDEKENNZEICHEN = b.KEY and a.LZE is NULL
                 ORDER BY a.BEZEICHNUNG ASC"""
 
-        return self.select_into_dict_list(sql, self.connection)
+        return self.select_into_dict_list(sql)
 
     def get_streets(self, municipality_id: int) -> list[dict]:
         sql = f"""SELECT a.FID, a.SCHLUESSEL as KEY, a.BEZEICHNUNG as VALUE
                 FROM AX_LAGEBEZKATEINTRAG a
                    LEFT JOIN AX_LAGEBEZEICHNUNGMITHNR b ON (b.VERSCHLUESSELT = a.SCHLUESSEL)
                 WHERE SCHLUESSEL LIKE '{municipality_id}%'
+                AND a.LZE IS NULL
+                AND b.LZE IS NULL
                 GROUP BY a.FID, a.SCHLUESSEL, a.BEZEICHNUNG
                 HAVING count(b.FID) > 0
                 ORDER BY VALUE ASC"""
 
-        return self.select_into_dict_list(sql, self.connection)
+        return self.select_into_dict_list(sql)
 
     def get_numbers(self, street_key: str) -> list[dict]:
         sql = f"""SELECT GEB.FID as KEY, HN.VALUE as VALUE
@@ -134,18 +160,19 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
                    SELECT	ID as KEY, HAUSNUMMER as VALUE
                    FROM	AX_LAGEBEZEICHNUNGMITHNR
                    WHERE 	VERSCHLUESSELT='{street_key}'
+                   AND LZE IS NULL
                 ) HN
                 LEFT JOIN ME_BZ BEZ ON UPPER(BEZ.TABELLE) = Upper('AX_Gebaeude') AND BEZ.ZID=HN.KEY
                 JOIN AX_GEBAEUDE GEB ON BEZ.ID=GEB.ID
                 ORDER BY VALUE"""
 
-        return self.select_into_dict_list(sql, self.connection)
+        return self.select_into_dict_list(sql)
 
     def get_bundesland(self) -> Any:
         """Returns first distinct Bundesland used in table 'ax_flurstueck'."""
 
-        sql = """select distinct(substr(gemarkung, 1, 2)) as bl from ax_flurstueck"""
-        result = self.select_into_dict_list(sql, self.connection)
+        sql = """select distinct(substr(gemarkung, 1, 2)) as bl from ax_flurstueck where lze is null"""
+        result = self.select_into_dict_list(sql)
         if not result:
             return ""
         return result[0].get("bl", "")
@@ -154,32 +181,51 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
         sql = """SELECT a.FID, a.SCHLUESSEL, a.BEZEICHNUNG as BEZEICHNUNG , count(b.FID) AS NUM
                 FROM AX_GEMARKUNG a
                 LEFT JOIN AX_FLURSTUECK b ON (b.GEMARKUNG = a.SCHLUESSEL)
+                WHERE a.LZE IS NULL
+                AND b.LZE IS NULL
                 GROUP BY a.FID, a.SCHLUESSEL, a.BEZEICHNUNG
                 HAVING count(b.FID) > 0
                 ORDER BY a.BEZEICHNUNG ASC"""
 
-        return self.select_into_dict_list(sql, self.connection)
+        return self.select_into_dict_list(sql)
 
     def search_flurstuecke(self, fsk="", gmk_gmn="", fln="", fsn_zae="", fsn_nen="") -> list[dict]:
         sql = """SELECT FID,
         (ifnull(gemarkung, '')  || '-' || ifnull(flurnummer, '')  || '-' || ifnull(flurstuecksnummer_zaehler, '')  || '-' || ifnull(flurstuecksnummer_nenner, ''))  AS CAPTION
         FROM AX_FLURSTUECK WHERE LZE IS NULL"""
 
-        def add_condition(sql_: str, column: str, value: str, is_first: bool):
+        def add_condition(sql_: str, column: str, value: str) -> str:
             if not value:
-                return sql_, is_first
+                return sql_
 
             sql_ += f" AND {column} = '{value}'"
-            return sql_, False
+            return sql_
 
         if fsk:
             sql += f" AND flurstueckskennzeichen LIKE '%{fsk}%'"
         else:
-            sql, first = add_condition(sql, "gemarkung", gmk_gmn, True)
-            sql, first = add_condition(sql, "flurnummer", fln, first)
-            sql, first = add_condition(sql, "flurstuecksnummer_zaehler", fsn_zae, first)
-            sql, first = add_condition(sql, "flurstuecksnummer_nenner", fsn_nen, first)
+            sql = add_condition(sql, "gemarkung", gmk_gmn)
+            sql = add_condition(sql, "flurnummer", fln)
+            sql = add_condition(sql, "flurstuecksnummer_zaehler", fsn_zae)
+            sql = add_condition(sql, "flurstuecksnummer_nenner", fsn_nen)
 
         sql += " ORDER BY flurstueckskennzeichen"
 
-        return self.select_into_dict_list(sql, self.connection)
+        return self.select_into_dict_list(sql)
+
+    def get_standard_crs(self):
+        """Gets the standard CRS to be used as subset filter.
+        ID is used as subset filter and a QgsCoordinateReferenceSystem as fallback for layers with invalid CRS."""
+
+        srids = {
+            "ETRS89_UTM32": 25832,
+            "ETRS89_UTM33": 25833,
+        }
+
+        sql = "SELECT ID, crs FROM ME_KOORDINATEnANGABEN WHERE standard = 1 LIMIT 1"
+        result = self.select_into_dict_list(sql)
+
+        self.standard_srs_id = result[0].get("ID") if result else None
+
+        srid = srids.get(result[0].get("crs")) if result else None
+        self.standard_crs = QgsCoordinateReferenceSystem(srid)

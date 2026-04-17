@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from qgis.PyQt.QtCore import QVariant
 from qgis.core import QgsAbstractDatabaseProviderConnection
 
 
@@ -12,7 +13,16 @@ def select_into_dict_list(sql: str, connection: QgsAbstractDatabaseProviderConne
         columns = query_result.columns()
         while query_result.hasNextRow():
             row = query_result.nextRow()
-            d = dict(zip(columns, row))
+            d = {}
+
+            for i in range(len(columns)):
+                column_name = columns[i]
+                value = row[i]
+                # Convert QVariant NULL to None.
+                if isinstance(value, QVariant) and value.isNull():
+                    value = None
+                d[column_name] = value
+
             result.append(d)
     except Exception as e:
         error_text = str(e)

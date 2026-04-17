@@ -1,5 +1,7 @@
 from typing import Any, Optional
 
+from qgis.core import QgsMapLayer
+
 from . import settings
 from .alkisdatasources.alkisdatasource import AlkisDataSource, AlkisDataSourceType
 from .alkisdatasources.sagisconverter import SagisConverter
@@ -24,4 +26,20 @@ def create_datasource() -> Optional[AlkisDataSource]:
         datasource = SqliteSagisConverter(connection)
     else:
         datasource = None
+
+    if datasource:
+        datasource.set_layers_readonly = settings.layers_readonly()
+        datasource.set_layers_required = settings.layers_required()
+
     return datasource
+
+
+def set_layer_required(layer: QgsMapLayer, required: bool) -> None:
+    flags = layer.flags()
+
+    if required:
+        flags &= ~QgsMapLayer.LayerFlag.Removable
+    else:
+        flags |= QgsMapLayer.LayerFlag.Removable
+
+    layer.setFlags(QgsMapLayer.LayerFlag(flags))

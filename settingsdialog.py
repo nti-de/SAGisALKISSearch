@@ -77,6 +77,10 @@ class SettingsDialog(QDialog, FORM_CLASS):
         # SQLite file path
         settings.set_file(self.mQgsFileWidget.filePath())
 
+        # Layer flags
+        settings.set_layers_readonly(self.checkBoxReadonly.isChecked())
+        settings.set_layers_required(self.checkBoxRequired.isChecked())
+
         # SAGis web URL
         settings.set_sagisweburl(self.leSagiswebUrl.text())
 
@@ -99,6 +103,10 @@ class SettingsDialog(QDialog, FORM_CLASS):
         else:
             self.rbSagisPostgres.setChecked(False)
             self.rbSagisSqlite.setChecked(False)
+
+        # Layer flags
+        self.checkBoxReadonly.setChecked(True)  # Always set to checked by default
+        self.checkBoxRequired.setChecked(settings.layers_required())
 
         # SAGis web URL
         self.leSagiswebUrl.setText(settings.sagisweburl())

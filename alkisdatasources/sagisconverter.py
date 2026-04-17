@@ -3,6 +3,7 @@ from typing import Any, List
 from qgis.core import QgsAbstractDatabaseProviderConnection, QgsDataSourceUri, QgsProject, QgsVectorLayer, QgsWkbTypes
 
 from .alkisdatasource import AlkisDataSourcePostgres, AlkisDataSourceType, TableInfo
+from .. import utils
 
 
 class SagisConverter(AlkisDataSourcePostgres):
@@ -34,6 +35,7 @@ class SagisConverter(AlkisDataSourcePostgres):
         sql = """SELECT a.FID, a.LABEL_TEXT as LABEL_TEXT
         FROM AX_LAGEBEZOHNEHNR_TBL a
         WHERE (a.SNR = '4107' AND Upper(a.ART) IN ('STRASSE', 'WEG', 'PLATZ'))
+        AND a.LZE IS NULL
         ORDER BY LABEL_TEXT asc"""
 
         return self.select_into_dict_list(sql)
@@ -43,6 +45,7 @@ class SagisConverter(AlkisDataSourcePostgres):
         FROM AX_GEMEINDE a, (
                 SELECT DISTINCT(SUBSTR(VERSCHLUESSELT, 1, (SELECT MAX(LENGTH(GEMEINDEKENNZEICHEN)) FROM AX_GEMEINDE))) as KEY
                 FROM AX_LAGEBEZEICHNUNGMITHNR
+                WHERE LZE IS NULL
                 ) b
             WHERE a.GEMEINDEKENNZEICHEN = b.KEY and a.LZE is NULL
         ORDER BY a.BEZEICHNUNG ASC"""
@@ -54,6 +57,8 @@ class SagisConverter(AlkisDataSourcePostgres):
         FROM AX_LAGEBEZKATEINTRAG a
            LEFT JOIN AX_LAGEBEZEICHNUNGMITHNR b ON (b.VERSCHLUESSELT = a.SCHLUESSEL)
         WHERE SCHLUESSEL LIKE '{municipality_id}%'
+        AND a.LZE IS NULL
+        AND b.LZE IS NULL
         GROUP BY a.FID, a.SCHLUESSEL, a.BEZEICHNUNG
         HAVING count(b.FID) > 0
         ORDER BY VALUE ASC"""
@@ -66,6 +71,7 @@ class SagisConverter(AlkisDataSourcePostgres):
            SELECT	ID as KEY, HAUSNUMMER as VALUE
            FROM	AX_LAGEBEZEICHNUNGMITHNR
            WHERE 	VERSCHLUESSELT='{street_key}'
+           AND LZE IS NULL
            ORDER BY NULLIF(regexp_replace(hausnummer, '\D', '', 'g'), '')::int
         ) HN
         LEFT JOIN ME_BZ BEZ ON UPPER(BEZ.TABELLE) = Upper('AX_Gebaeude') AND BEZ.ZID=HN.KEY
@@ -77,7 +83,7 @@ class SagisConverter(AlkisDataSourcePostgres):
     def get_bundesland(self) -> Any:
         """Returns first distinct Bundesland used in table 'ax_flurstueck'."""
 
-        sql = """select distinct(substr(gemarkung, 1, 2)) as bl from ax_flurstueck"""
+        sql = """select distinct(substr(gemarkung, 1, 2)) as bl from ax_flurstueck where lze is null"""
         result = self.select_into_dict_list(sql)
         if not result:
             return ""
@@ -87,6 +93,8 @@ class SagisConverter(AlkisDataSourcePostgres):
         sql = """SELECT a.FID, a.SCHLUESSEL, a.BEZEICHNUNG as BEZEICHNUNG , count(b.FID) AS NUM
         FROM AX_GEMARKUNG a
         LEFT JOIN AX_FLURSTUECK b ON (b.GEMARKUNG = a.SCHLUESSEL)
+        WHERE a.lze IS NULL
+        AND b.LZE IS NULL
         GROUP BY a.FID, a.SCHLUESSEL, a.BEZEICHNUNG
         HAVING count(b.FID) > 0
         ORDER BY a.BEZEICHNUNG ASC"""
@@ -101,25 +109,24 @@ class SagisConverter(AlkisDataSourcePostgres):
          coalesce(flurstuecksnummer_zaehler, '') || '-' ||
          coalesce(flurstuecksnummer_nenner, '')
          ) AS CAPTION
-        FROM AX_FLURSTUECK"""
+        FROM AX_FLURSTUECK
+        WHERE LZE IS NULL"""
 
-        def add_condition(sql_: str, column: str, value: str, is_first: bool):
+        def add_condition(sql_: str, column: str, value: str) -> str:
             if not value:
-                return sql_, is_first
+                return sql_
 
-            sql_ += " WHERE " if is_first else " AND "
-            sql_ += f"{column} = '{value}'"
-            return sql_, False
-
+            sql_ += f" AND {column} = '{value}'"
+            return sql_
 
         if fsk:
-            sql += f" WHERE flurstueckskennzeichen LIKE '%{fsk}%'"
+            sql += f" AND flurstueckskennzeichen LIKE '%{fsk}%'"
             return self.select_into_dict_list(sql)
         else:
-            sql, first = add_condition(sql, "gemarkung", gmk_gmn, True)
-            sql, first = add_condition(sql, "flurnummer", fln, first)
-            sql, first = add_condition(sql, "flurstuecksnummer_zaehler", fsn_zae, first)
-            sql, first = add_condition(sql, "flurstuecksnummer_nenner", fsn_nen, first)
+            sql = add_condition(sql, "gemarkung", gmk_gmn)
+            sql = add_condition(sql, "flurnummer", fln)
+            sql = add_condition(sql, "flurstuecksnummer_zaehler", fsn_zae)
+            sql = add_condition(sql, "flurstuecksnummer_nenner", fsn_nen)
 
         sql += " ORDER BY flurstueckskennzeichen"
 
@@ -145,12 +152,19 @@ class SagisConverter(AlkisDataSourcePostgres):
 
         layer = QgsVectorLayer(uri.uri(), table.table_name, "postgres")
         layer.setName(table.caption)
+        layer.setSubsetString("LZE IS NULL")
 
         if not layer.isValid() and self.created_layers:
             layer.setCrs(self.created_layers[0].crs())
 
         if table.display_expression:
             layer.setDisplayExpression(table.display_expression)
+
+        if self.set_layers_readonly:
+            layer.setReadOnly(True)
+
+        if self.set_layers_required:
+            utils.set_layer_required(layer, True)
 
         QgsProject.instance().addMapLayer(layer, addToLegend=False)
         tree_layer = self.group_basemap.insertLayer(0, layer)
