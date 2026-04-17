@@ -43,7 +43,7 @@ class ExcelExportTask(QgsTask):
                     return False
 
                 dataframe = self.process_worksheet(worksheet_config)
-                if dataframe is not None and not dataframe.empty:
+                if dataframe is not None:
                     dataframes.append(dataframe)
 
             if self.isCanceled():
@@ -80,7 +80,7 @@ class ExcelExportTask(QgsTask):
     def process_worksheet(self, worksheet: SagisWorksheetType) -> Optional[pd.DataFrame]:
         data_dicts = self.get_worksheet_data(worksheet)
         if not data_dicts:
-            return None
+            return pd.DataFrame()
 
         dataframe = pd.DataFrame(data_dicts)
         result_dataframe = dataframe

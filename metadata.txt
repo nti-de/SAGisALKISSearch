@@ -4,17 +4,17 @@
 
 [general]
 name=SAGis ALKIS Suche
-qgisMinimumVersion=3.28
+qgisMinimumVersion=3.40
 description=Plugin zum Einbinden und Durchsuchen einer ALKIS-Datenbank
-version=1.0.8
+version=1.1.0
 author=NTI Deutschland GmbH
 email=qgis-de@nti-group.com
 
 about=DE: SAGis ALKIS Suche ermöglicht das Einbinden, Durchsuchen und Exportieren von ALKIS Flurstückdaten.
-      Unterstützt werden mit dem SAGis ALKIS Konverter erstellte Datenbanken (PostgreSQL/SQLite).
+      Unterstützt werden mit dem SAGis ALKIS Konverter erstellte Datenbanken im Format GeoInfoDok7 (GID7) (PostgreSQL/SQLite).
 
       EN: SAGis ALKIS Search enables the integration, search and export of ALKIS parcel data.
-      Databases created with the SAGis ALKIS converter are supported (PostgreSQL/SQLite).
+      Databases created with the SAGis ALKIS converter in GeoInfoDok 7 (GID7) format are supported (PostgreSQL/SQLite).
 
       Funktionen:
       - Einbinden der Datenbank
@@ -37,6 +37,10 @@ repository=https://github.com/nti-de/SAGisALKISSearch/
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
+    1.1.0
+    - Adapt to GeoInfoDok 7 (GID7)
+    - Add PyQt6 support
+
     1.0.2
     - Fix package import for new Python version
 

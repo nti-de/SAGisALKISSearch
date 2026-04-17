@@ -126,6 +126,8 @@ class SagisPluginBase:
             self.sagis_menu.removeAction(self.menu.menuAction())
             if self.sagis_menu.isEmpty():
                 self.sagis_menu.deleteLater()
+                # Workaround for Plugin Reloader
+                self.sagis_menu.setObjectName("sagis_menu_deleted")
 
         if self.toolbar and not self.toolbar.actions():
             del self.toolbar

@@ -24,18 +24,6 @@ class GenericDialog(QDialog, FORM_CLASS):
         super().__init__(parent)
         self.setupUi(self)
 
-        self.setStyleSheet("""
-            QLabel {
-                color: black;
-            }
-            QTableView {
-                color: black;
-            }
-            QHeaderView::section {
-                color: black;
-            }
-        """)
-
         self.context = config_context
         self.result_list = result_list
 

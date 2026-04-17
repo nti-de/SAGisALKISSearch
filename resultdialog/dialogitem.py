@@ -16,6 +16,19 @@ class DialogItem(QFrame):
                  panel: SagisGnDlgConfig.Container.InfoTemplate.Panels.Panel,
                  data: dict, object_index=-1, total_objects=0, parent=None):
         super().__init__(parent)
+
+        self.setStyleSheet("""
+            QLabel {
+                color: black;
+            }
+            QTableView {
+                color: black;
+            }
+            QHeaderView::section {
+                color: black;
+            }
+        """)
+
         self.context = context
         self.panel = panel
         self.data = data

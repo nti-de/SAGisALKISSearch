@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<SAGisExcelExportDefinition xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:noNamespaceSchemaLocation="SAGisExcelExportDefinition.xsd">
+	<SAGisExcelExportItem>
+		<FeatureClass>AX_FLURSTUECK</FeatureClass>
+		<Title>Nutzungsarten (Statistik)</Title>
+		<FileName>Nutzungsarten_Statistik</FileName>
+		<ProviderTypeRestrictions>
+			<Type>OSGeo.PostgreSQL</Type>
+		</ProviderTypeRestrictions>
+		<WorkSheet>
+			<AccessRight>AX_FLURSTUECK</AccessRight>
+			<TabColor>red</TabColor>
+			<WorkSheetName>Nutzungsarten (Statistik)</WorkSheetName>
+			<Sql>
+			<![CDATA[
+				SELECT A.VALUE AS NUTZUNG, round(SUM(F.AMTLICHEFLAECHE*N.FLAECHEANTEIL/100), 0) AS FLAECHE
+				FROM AX_FLURSTUECK F
+				LEFT JOIN EX_FSTNUTZUNG N ON F.ID = N.FST_ID
+				LEFT JOIN EX_NUTZUNGART_TBD A ON N.ART_TABELLE = A.SHORT_VALUE
+				WHERE N.ART_TABELLE IS NOT NULL
+				GROUP BY A.VALUE
+				ORDER BY A.VALUE
+			]]>
+			</Sql>
+		</WorkSheet>
+		<WorkSheet>
+			<AccessRight>AX_FLURSTUECK</AccessRight>
+			<TabColor>green</TabColor>
+			<WorkSheetName>Gemarkung</WorkSheetName>
+			<Sql>
+			<![CDATA[
+				SELECT G.BEZEICHNUNG AS GEMARKUNG, A.VALUE AS NUTZUNG, round(SUM(F.AMTLICHEFLAECHE*N.FLAECHEANTEIL/100),0) AS FLAECHE
+				FROM AX_GEMARKUNG G
+				LEFT JOIN AX_FLURSTUECK F ON G.SCHLUESSEL = F.GEMARKUNG
+				LEFT JOIN EX_FSTNUTZUNG N ON F.ID = N.FST_ID
+				LEFT JOIN EX_NUTZUNGART_TBD A ON N.ART_TABELLE = A.SHORT_VALUE
+				WHERE F.FID IS NOT NULL AND N.ART_TABELLE IS NOT NULL
+				GROUP BY G.BEZEICHNUNG, A.VALUE
+				ORDER BY G.BEZEICHNUNG, A.VALUE
+			]]>
+			</Sql>
+		</WorkSheet>
+		<WorkSheet>
+			<AccessRight>AX_FLURSTUECK</AccessRight>
+			<TabColor>blue</TabColor>
+			<WorkSheetName>Gemeinde</WorkSheetName>
+			<Sql>
+			<![CDATA[
+				SELECT G.BEZEICHNUNG AS GEMEINDE, A.VALUE AS NUTZUNG, round(SUM(F.AMTLICHEFLAECHE*N.FLAECHEANTEIL/100), 0) AS FLAECHE
+				FROM AX_GEMEINDE G
+				LEFT JOIN AX_FLURSTUECK F ON G.GEMEINDEKENNZEICHEN = F.GEMEINDEZUGEHOERIGKEIT
+				LEFT JOIN EX_FSTNUTZUNG N ON F.ID = N.FST_ID
+				LEFT JOIN EX_NUTZUNGART_TBD A ON N.ART_TABELLE = A.SHORT_VALUE
+				WHERE F.FID IS NOT NULL AND N.ART_TABELLE IS NOT NULL
+				GROUP BY G.BEZEICHNUNG, A.VALUE
+				ORDER BY G.BEZEICHNUNG, A.VALUE
+			]]>
+			</Sql>
+		</WorkSheet>
+	</SAGisExcelExportItem>
+</SAGisExcelExportDefinition>

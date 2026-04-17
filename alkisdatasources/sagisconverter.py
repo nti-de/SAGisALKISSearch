@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from qgis.core import QgsDataSourceUri, QgsProject, QgsVectorLayer, QgsWkbTypes
 
@@ -17,15 +17,18 @@ class SagisConverter(AlkisDataSourcePostgres):
 
         self.tables = {
             "ax_flurstueck": TableInfo("ax_flurstueck", "Flurstücke", "geom", "fid"),
-            "ax_gebaeude": TableInfo("ax_gebaeude", "Gebäude", "geom", "fid"),
+            "ax_gebaeude": TableInfo("ax_gebaeude", "Gebäude", "geom", "fid", type=QgsWkbTypes.Type.MultiSurface),
             "ax_flurstueck_tbl": TableInfo("ax_flurstueck_tbl", "Beschriftung Flurstück", "geom", "fid"),
             "ax_flurstueck_oa_line": TableInfo("ax_flurstueck_oa", "ALKIS_BB - AX_Flurstueck_oa", "geom", "fid",
                                                type=QgsWkbTypes.Type.LineString),
             "ax_flurstueck_oa_arrowhead": TableInfo("ax_flurstueck_oa", "ALKIS_BB - AX_Flurstueck_oa", "geom", "fid",
                                                     type=QgsWkbTypes.Type.Point),
-            "ax_gebaeude_tbl": TableInfo("ax_gebaeude_tbl", "Beschriftung Hausnummer", "geom", "fid"),
+            "ax_gebaeude_tbl": TableInfo("ax_gebaeude_tbl", "Beschriftung Hausnummer", "geom", "fid",
+                                         type=QgsWkbTypes.Type.Point),
             "ax_lagebezohnehnr_tbl": TableInfo("ax_lagebezohnehnr_tbl", "Straßennamen", "geom", "fid")
         }
+
+        self.created_layers: List[QgsVectorLayer] = []
 
     def get_streetnames(self) -> list[dict]:
         sql = """SELECT a.FID, a.LABEL_TEXT as LABEL_TEXT
@@ -144,6 +147,9 @@ class SagisConverter(AlkisDataSourcePostgres):
         layer = QgsVectorLayer(uri.uri(), table.table_name, "postgres")
         layer.setName(table.caption)
 
+        if not layer.isValid() and self.created_layers:
+            layer.setCrs(self.created_layers[0].crs())
+
         if table.display_expression:
             layer.setDisplayExpression(table.display_expression)
 
@@ -151,3 +157,5 @@ class SagisConverter(AlkisDataSourcePostgres):
         self.group_basemap.insertLayer(0, layer)
 
         table.layer_id = layer.id()
+
+        self.created_layers.append(layer)

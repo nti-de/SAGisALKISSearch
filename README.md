@@ -2,7 +2,7 @@
 ###### (SAGis ALKIS Search)
 
 SAGis ALKIS Suche ist eine Erweiterung für die GIS-Software QGIS zum Einbinden, Durchsuchen und Exportieren von ALKIS Flurstückdaten. \
-Unterstützt werden mit dem [SAGis ALKIS](https://www.nti-group.com/de/produkte/sagis-loesungen/sagis-alkis/) Konverter erstellte Datenbanken (PostgreSQL/SQLite).
+Unterstützt werden mit dem [SAGis ALKIS](https://www.nti-group.com/de/produkte/sagis-loesungen/sagis-alkis/) Konverter erstellte Datenbanken im Format GeoInfoDok 7 (GID7) (PostgreSQL/SQLite).
 
 ## Funktionen
 
@@ -16,7 +16,7 @@ Unterstützt werden mit dem [SAGis ALKIS](https://www.nti-group.com/de/produkte/
 
 ### Software-Voraussetzungen
 
-- QGIS >= 3.28
+- QGIS >= 3.40
 - PostgreSQL >= 12 mit PostGIS 3.1
 
 ### Installation
@@ -24,9 +24,9 @@ Unterstützt werden mit dem [SAGis ALKIS](https://www.nti-group.com/de/produkte/
 SAGis ALKIS Suche kann über das QGIS-Plugin Repository heruntergeladen werden.
 
 Für eine erfolgreiche Ausführung des Programms müssen zudem folgende Python-Komponenten installiert werden:
-- pandas (getestet mit Version 2.0.2)
-- xlsxwriter (getestet mit Version 3.1.9)
-- xsdata (getestet mit Version 23.8)
+- pandas (getestet mit Version 2.3.1)
+- xlsxwriter (getestet mit Version 3.2.9)
+- xsdata (getestet mit Version 26.1)
 
 <details><summary><b>Anleitung anzeigen</b></summary>
 
