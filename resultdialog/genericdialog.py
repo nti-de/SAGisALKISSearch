@@ -130,12 +130,14 @@ class GenericDialog(QDialog, FORM_CLASS):
 
         data = self.context.datasource.select_into_dict_list(sql, null_value_to_none=True)
         if not data and self.context.datasource.error_text:
-            loggerutils.log_error(f"Fehler (GenericDialog):\n{self.context.datasource.error_text}")
+            loggerutils.log_error(f"Fehler (GenericDialog) -> {panel.caption} ({panel.query.name}):\n{self.context.datasource.error_text}")
         data = data if data else []
 
         name = panel.query.name
         if name:
             self.context.data_dicts[name] = data
+        else:
+            loggerutils.log_error(f"Fehler (GenericDialog) -> {panel.caption}:\nQuery hat keinen Namen")
 
     def show_current_clicked(self):
         current = self.current_object()

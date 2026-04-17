@@ -25,7 +25,9 @@ class DialogBindingWidget(QFrame):
         self.table_view = QTableView()
         self.table_view.verticalHeader().setVisible(False)
         self.table_view.setAlternatingRowColors(True)
-        self.table_view.setStyleSheet("alternate-background-color: #bfd4ee; background-color: #edf5ff")
+        self.table_view.horizontalHeader().setStyleSheet("::section { background-color: #edf5ff }")
+        self.table_view.setStyleSheet("::item:alternate { background-color: #edf5ff }"
+                                      "::item { background-color: #bfd4ee }")
         self.layout().addWidget(self.table_view)
 
         self.context: Optional[ConfigContext] = None
@@ -74,7 +76,7 @@ class DialogBindingWidget(QFrame):
         sql = sagisgndlgconfig_utils.replace_schema_placeholder(self.binding.sql, self.context.config)
         success, sql = commonfunctions.insert_dict_values_into_string(sql, self.input_data)
         if not success:
-            loggerutils.log_error(f"Fehler (DialogBindingWidget):\nAbfrageergebnis enthält nicht '{sql}'")
+            loggerutils.log_error(f"Fehler (DialogBindingWidget) -> {self.binding.caption}:\nAbfrageergebnis enthält nicht '{sql}'")
             return
 
         self.table_view.model().setQuery(sql, db)
@@ -107,15 +109,22 @@ class DialogBindingWidget(QFrame):
             return
 
         def get_logical_index(text: str):
+            # Look for exact match
             for i in range(self.table_view.model().columnCount()):
                 if self.table_view.model().headerData(i, Qt.Horizontal, Qt.DisplayRole) == text:
                     return i
+
+            # Look for case insensitive match
+            for i in range(self.table_view.model().columnCount()):
+                if self.table_view.model().headerData(i, Qt.Horizontal, Qt.DisplayRole).lower() == text.lower():
+                    return i
+
             return -1
 
         shown_columns = []
         for index, header_text in reversed(list(enumerate(self.binding.header_text))):
 
-            logical_index = get_logical_index(header_text.from_value.lower())
+            logical_index = get_logical_index(header_text.from_value)
             if logical_index == -1:
                 continue
 

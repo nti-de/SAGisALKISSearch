@@ -1,188 +1,279 @@
 <?xml version="1.0" encoding="utf-8" ?>
 
 <SAGisGnDlgConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xsi:noNamespaceSchemaLocation="SAGisGnDlgConfig.xsd">
+	<!--
+	AX_FLURSTUECK - Flurstück
+	Für SAGis ALKIS SQLite-DB
+	Berechtigungen:
+		AX_FLURSTUECK
+		AX_PERSON
+		AX_BUCHUNGSBLATT
+		AX_LAGEBEZEICHNUNGMITHNR,AX_LAGEBEZEICHNUNGOHNEHNR
+	-->
 	<Container>
 		<Caption>Flurstück</Caption>
+
 		<SearchTemplate>
+			<Queries>
+				<Query>
+					<BindTo>GEMARKUNG</BindTo>
+					<Sql><![CDATA[
+						SELECT a.FID, a.SCHLUESSEL, a.BEZEICHNUNG , count(b.FID) AS NUM
+						FROM AX_GEMARKUNG a
+							LEFT JOIN AX_FLURSTUECK b ON (b.GEMARKUNG = a.SCHLUESSEL)
+						GROUP BY a.FID, a.SCHLUESSEL, a.BEZEICHNUNG
+						HAVING count(b.FID) > 0
+						ORDER BY a.BEZEICHNUNG ASC
+					]]></Sql>
+
+					<KeyValueField>SCHLUESSEL</KeyValueField>
+					<CaptionValueField>BEZEICHNUNG</CaptionValueField>
+				</Query>
+
+				<Query>
+					<BindTo>EX_NUTZUNGART_TBD</BindTo>
+					<Sql><![CDATA[
+						SELECT a.VALUE, a.SHORT_VALUE, count(1)
+						FROM ex_nutzungart_tbd a
+							INNER JOIN EX_FSTNUTZUNG b ON ( b.art_tabelle = a.short_value)
+						GROUP BY a.value, a.short_value
+						ORDER BY a.value asc
+					]]></Sql>
+
+					<KeyValueField>SHORT_VALUE</KeyValueField>
+					<CaptionValueField>VALUE</CaptionValueField>
+				</Query>
+
+			</Queries>
+
 			<Search>
-				<Sql></Sql>
+				<Sql><![CDATA[
+					SELECT DISTINCT(AX_FLURSTUECK.FID), AX_FLURSTUECK.FLURSTUECKSKENNZEICHEN
+					FROM AX_FLURSTUECK
+						LEFT JOIN EX_FSTNUTZUNG b ON ( b.FLURSTUECKSKENNZEICHEN = AX_FLURSTUECK.FLURSTUECKSKENNZEICHEN )
+					{WHERE_PARAMETERS}
+					ORDER BY AX_FLURSTUECK.FLURSTUECKSKENNZEICHEN ASC
+				]]></Sql>
+
+				<FixedSqlWhere>AX_FLURSTUECK.LZE is NULL</FixedSqlWhere>
+
+				<Parameter DbField="GEMARKUNG" FormField="GEMARKUNG" />
+				<Parameter DbField="FLURNUMMER" FormField="FLURNUMMER"/>
+				<Parameter DbField="FLURSTUECKSNUMMER_ZAEHLER" FormField="FLURSTUECKSNUMMER_ZAEHLER" WhereCondition="Like" />
+				<Parameter DbField="AMTLICHEFLAECHE" FormField="AMTLICHEFLAECHE" Range="true"/>
+				<Parameter DbField="AREA" FormField="AREA" Range="true"/>
+				<Parameter DbField="ART_TABELLE" DbJoinedTableName="EX_FSTNUTZUNG" DbTableAlias="b" FormField="EX_NUTZUNGART_TBD" />
 			</Search>
-			<SearchTemplate></SearchTemplate>
+
+			<SearchTemplate>SearchTemplates\AX_FLURSTUECK\AX_FLURSTUECK</SearchTemplate>
 		</SearchTemplate>
 
-		<!--
-		*
-		* InfoTemplate
-		*
-		-->
 		<InfoTemplate>
-			<Editable>false</Editable>
 			<Panels>
-				<!-- Allgemein -->
+				<!-- Allgemein, Flurstück - AX_FLURSTUECK -->
 				<Panel>
 					<Caption>Allgemein</Caption>
+					<Authorisation>AX_FLURSTUECK</Authorisation>
 					<ShowDatacount>false</ShowDatacount>
-					<Query>
+					<Query JsDataColumns = "FLURSTUECKSKENNZEICHEN">
 						<Name>AX_FLURSTUECK</Name>
 						<AllowEmpty>false</AllowEmpty>
 						<AllowMaxResults>1</AllowMaxResults>
 						<Sql><![CDATA[
 								SELECT a.ID, a.FID, a.GEMEINDEZUGEHOERIGKEIT, a.ZEITPUNKTDERENTSTEHUNG, a.GEMARKUNG,
-									a.AMTLICHEFLAECHE, a.FLURNUMMER, a.FLURSTUECKSNUMMER_ZAEHLER, a.FLURSTUECKSNUMMER_NENNER,
-									a.FLURSTUECKSKENNZEICHEN, a.AREA, a.FLURSTUECKSFOLGE, a.ZUSTAENDIGESTELLE, a.ANLASS1, a.ANLASS2,
-									a.RECHTSBEHELFSVERFAHREN,
-									(CASE a.RECHTSBEHELFSVERFAHREN WHEN 0 THEN 'Nein' WHEN 1 THEN 'Ja' ELSE 'Keine Angabe' END) as XRECHTSBEHELFSVERFAHREN,
-									a.ABWEICHENDERRECHTSZUSTAND,
-									(CASE a.ABWEICHENDERRECHTSZUSTAND WHEN 0 THEN 'Nein' WHEN 1 THEN 'Ja' ELSE 'Keine Angabe' END) as XABWEICHENDERRECHTSZUSTAND,
-									a.ZWEIFELHAFTERFLURSTUECKSNA,
-									(CASE a.ZWEIFELHAFTERFLURSTUECKSNA WHEN 0 THEN 'Nein' WHEN 1 THEN 'Ja' ELSE 'Keine Angabe' END) as XZWEIFELHAFTERFLURSTUECKSNA,
-									b.SCHLUESSELGESAMT as GEMEINDESCHLUESSEL, b.BEZEICHNUNG as GEMEINDEBEZEICHNUNG,
-									c.SCHLUESSELGESAMT as GEMARKUNGSCHLUESSEL, c.BEZEICHNUNG as GEMARKUNGBEZEICHNUNG,
-									d.BEZEICHNUNG as ZUSTAENDIGESTELLEBEZ,
-									e.VALUE AS ANLASS1_VALUE, f.VALUE AS ANLASS2_VALUE
+								 a.AMTLICHEFLAECHE, a.FLURNUMMER, a.FLURSTUECKSNUMMER_ZAEHLER, a.FLURSTUECKSNUMMER_NENNER,
+								 a.FLURSTUECKSKENNZEICHEN, a.AREA, a.FLURSTUECKSFOLGE, a.ZUSTAENDIGESTELLE, a.ANLASS1, a.ANLASS2,
+
+								 a.RECHTSBEHELFSVERFAHREN,
+								 CASE WHEN a.RECHTSBEHELFSVERFAHREN = '0' THEN 'Nein' WHEN a.RECHTSBEHELFSVERFAHREN = '1' THEN 'Ja'  ELSE 'Keine Angabe' END as XRECHTSBEHELFSVERFAHREN,
+
+								 a.ABWEICHENDERRECHTSZUSTAND,
+								 CASE WHEN a.ABWEICHENDERRECHTSZUSTAND = '0' THEN 'Nein' WHEN a.ABWEICHENDERRECHTSZUSTAND = '1' THEN 'Ja'  ELSE 'Keine Angabe' END as XABWEICHENDERRECHTSZUSTAND,
+
+								 a.ZWEIFELHAFTERFLURSTUECKSNA,
+								 CASE WHEN a.ZWEIFELHAFTERFLURSTUECKSNA = '0' THEN 'Nein' WHEN a.ZWEIFELHAFTERFLURSTUECKSNA = '1' THEN 'Ja'  ELSE 'Keine Angabe' END as XZWEIFELHAFTERFLURSTUECKSNA,
+
+								 ROUND(ABS(100 - (100 * a.AMTLICHEFLAECHE / a.AREA)), 3) as X_AREA_DIFF_PERC,
+
+								 b.SCHLUESSELGESAMT as GEMEINDESCHLUESSEL, b.BEZEICHNUNG as GEMEINDEBEZEICHNUNG,
+								 c.SCHLUESSELGESAMT as GEMARKUNGSCHLUESSEL, c.BEZEICHNUNG as GEMARKUNGBEZEICHNUNG,
+								 d.BEZEICHNUNG as ZUSTAENDIGESTELLEBEZ,
+								 e.VALUE AS ANLASS1_VALUE, f.VALUE AS ANLASS2_VALUE
 								FROM AX_FLURSTUECK a
-									LEFT OUTER JOIN AX_GEMEINDE b ON ( b.GEMEINDEKENNZEICHEN = a.GEMEINDEZUGEHOERIGKEIT )
-									LEFT OUTER JOIN AX_GEMARKUNG c ON ( c.SCHLUESSEL = a.GEMARKUNG )
-									LEFT OUTER JOIN AX_DIENSTSTELLE d ON ( d.SCHLUESSEL = a.ZUSTAENDIGESTELLE )
-									LEFT OUTER JOIN AA_ANLASSART_TBD e ON ( e.SHORT_VALUE = a.ANLASS1 )
-									LEFT OUTER JOIN AA_ANLASSART_TBD f ON ( f.SHORT_VALUE = a.ANLASS2 )
-								WHERE a.FID = {SELECTED_MAP_ITEM}
+								 LEFT OUTER JOIN AX_GEMEINDE b ON ( b.GEMEINDEKENNZEICHEN = a.GEMEINDEZUGEHOERIGKEIT AND b.LZE is NULL )
+								 LEFT OUTER JOIN AX_GEMARKUNG c ON ( c.SCHLUESSEL = a.GEMARKUNG AND c.LZE is NULL )
+								 LEFT OUTER JOIN AX_DIENSTSTELLE d ON ( d.SCHLUESSEL = a.ZUSTAENDIGESTELLE AND d.LZE is NULL )
+								 LEFT OUTER JOIN AA_ANLASSART_TBD e ON ( e.SHORT_VALUE = a.ANLASS1 )
+								 LEFT OUTER JOIN AA_ANLASSART_TBD f ON ( f.SHORT_VALUE = a.ANLASS2 )
+								WHERE a.FID = {SELECTED_MAP_ITEM} AND a.LZE is NULL
 						]]></Sql>
 					</Query>
 
-					<!-- Eigentümer Übersicht -->
 					<Bindings>
 						<Sql><![CDATA[
 							SELECT
-								d.VALUE as BUCHUNGSART_VALUE ,
+								e.BUCHUNGSBLATTKENNZEICHEN,
+								d.VALUE as BUCHUNGSART_VALUE,
 								b.VALUE as EIGENTUEMERART_VALUE,
-								CONCAT(a.ANTEIL_ZAEHLER::int, '/', a.ANTEIL_NENNER::int) as X_ANTEILE,
-								CONCAT(c.VALUE, ' ', a.VORNAME, ' ', a.NACHNAMEODERFIRMA) as X_EIGENTUEMER
-							FROM (
-								select
-									me.FID, me.FSID,me.DIREKT,me.D_BUART,me.D_BBID,me.D_BLART,me.I_BUART,me.I_BBID,me.I_BLART,me.NNID,
-									me.BBID,me.PEID,me.LAUFENDENUMMERNACHDIN1421,me.NUMMER,me.ANTEIL_ZAEHLER,me.ANTEIL_NENNER,
-									me.ARTDERRECHTSGEMEINSCHAFT,me.EIGENTUEMERART,
-
-									pe.FID FID_PE, pe.ID ID_PE, pe.LZB LZB_PE, pe.NACHNAMEODERFIRMA, pe.ANREDE, pe.VORNAME, pe.NAMENSBESTANDTEIL,
-									pe.AKADEMISCHERGRAD, pe.GEBURTSNAME, pe.GEBURTSDATUM, pe.WOHNORTODERSITZ, pe.BERUF, pe.SONSTIGEEIGENSCHAFTEN,
-									pe.HAUSHALTSSTELLELANDESGRUND, pe.QUALITAETSANGABEN
-								FROM ME_FS_PE me
-									left outer JOIN AX_FLURSTUECK fs on ( fs.ID = me.FSID AND fs.LZE is null )
-									inner JOIN AX_PERSON pe on ( pe.ID = me.PEID AND pe.LZE is null )
-							) a
-								LEFT OUTER JOIN AX_EIGENTUEMERART_TBD b ON ( b.SHORT_VALUE = a.EIGENTUEMERART )
-								LEFT OUTER JOIN AX_ANREDE_PERSON_TBD c ON ( c.SHORT_VALUE = a.ANREDE )
-								LEFT OUTER JOIN AX_BUCHUNGSART_TBD d ON ( d.SHORT_VALUE = a.I_BUART )
-							WHERE a.FSID = '{ID}'
-						]]></Sql>
-						
-						<BindTo>dataV_EIGENTUEMER_DIST_OVERVIEW</BindTo>
-						<HeaderText From="buchungsart_value" To="Buchungsart"/>
-						<HeaderText From="eigentuemerart_value" To="Eigentümerart"/>
-						<HeaderText From="x_anteile" To="Anteilsverhältnis"/>
-						<HeaderText From="x_eigentuemer" To="Eigentümer"/>
+								,(coalesce(c.VALUE, '') || ' ' ||
+								coalesce(pe.VORNAME, '') || ' ' ||
+								coalesce(pe.NACHNAMEODERFIRMA, '')) AS person_anrede_text
+							FROM me_fs_pe me
+								LEFT OUTER JOIN AX_BUCHUNGSBLATT e ON ( e.ID = me.BBID )
+								LEFT OUTER JOIN AX_BUCHUNGSART_TBD d ON ( d.SHORT_VALUE = me.I_BUART )
+								LEFT OUTER JOIN AX_EIGENTUEMERART_TBD b ON ( b.SHORT_VALUE = me.EIGENTUEMERART )
+								LEFT JOIN ax_person pe ON pe.id = me.peid AND pe.lze IS NULL
+								LEFT OUTER JOIN AX_ANREDE_PERSON_TBD c ON ( c.SHORT_VALUE = pe.ANREDE )
+							WHERE
+								me.I_BUART != '5000' AND
+								me.fsid = '{ID}'
+							ORDER BY pe.NACHNAMEODERFIRMA
+					   ]]></Sql>
+					   <BindTo>dataV_EIGENTUEMER_DIST_OVERVIEW</BindTo>
+					   <HeaderText From="BUCHUNGSART_VALUE" To="Buchungsart"/>
+					   <HeaderText From="EIGENTUEMERART_VALUE" To="Eigentümerart"/>
+					   <HeaderText From="person_anrede_text" To="Eigentümer"/>
+					   <HeaderText From="BUCHUNGSBLATTKENNZEICHEN" To="Buchungsblatt"/>
 					</Bindings>
 
-					<!-- Historisches Flurstueck -->
+					<!-- Nutzung -->
 					<Bindings>
-						<Sql>![CDATA[
-						SELECT
-						 a.GEMARKUNG, a.FLURNUMMER, a.FLURSTUECKSNUMMER_ZAEHLER, a.FLURSTUECKSNUMMER_NENNER, a.FLURSTUECKSFOLGE,
-						 a.FLURSTUECKSKENNZEICHEN, a.AMTLICHEFLAECHE, a.ZEITPUNKTDERENTSTEHUNG,
-							 c.SCHLUESSEL as GEMARKUNGSCHLUESSEL, c.BEZEICHNUNG as GEMARKUNGBEZEICHNUNG
-						FROM AX_HISTORISCHESFST a
-						 LEFT OUTER JOIN AX_GEMARKUNG c ON ( c.SCHLUESSEL = a.GEMARKUNG )
-						WHERE NACHFOLGERFLURSTUECKSKENNZ = '{FLURSTUECKSKENNZEICHEN}'
-						]]</Sql>
-						<BindTo>dataAX_HISTORISCHESFST</BindTo>
-						<HeaderText From="flurstuecksfolge" To="Flurstücksfolge"/>
-						<HeaderText From="flurstueckskennzeichen" To="Flurstückskennzeichen"/>
-						<HeaderText From="amtlicheflaeche" To="Amtl. Fläche"/>
-						<HeaderText From="zeitpunktderentstehung" To="Entstehung"/>
+						<Caption>Nutzung</Caption>
+						<Sql><![CDATA[
+
+							SELECT
+								a.NUTZ_ID, a.FST_ID, a.AREA AS X_AREA_INTERSECTION,
+								ROUND(((AX_FLURSTUECK.AMTLICHEFLAECHE * a.FLAECHEANTEIL) / 100)) as TFL_AMTLICH,
+								100 * (ROUND(((AX_FLURSTUECK.AMTLICHEFLAECHE * a.FLAECHEANTEIL) / 100))) / AMTLICHEFLAECHE AS AMTL_FLAECHEANTEIL,
+								a.FLAECHEANTEIL,
+								AX_FLURSTUECK.AMTLICHEFLAECHE,
+								AX_FLURSTUECK.AREA AS X_AREA_SOURCE,
+								b.VALUE AS X_SUBTYPE_VALUE,
+								c.VALUE AS ART_TABELLE_TEXT
+							FROM AX_FLURSTUECK
+								LEFT JOIN EX_FSTNUTZUNG a ON(a.FST_ID = AX_FLURSTUECK.ID)
+								LEFT JOIN EX_NUTZUNGART_TBD c ON(c.SHORT_VALUE = a.ART_TABELLE)
+								LEFT JOIN EX_TATSAECHLICHENUTZUNG ex_nutz ON ex_nutz.ID = a.NUTZ_ID
+								LEFT JOIN EX_NUTZUNG_EX_TBD b ON(b.SHORT_VALUE = ex_nutz.FUNKTION)
+							WHERE
+								AX_FLURSTUECK.ID = '{ID}'
+							ORDER BY a.AREA desc
+						]]></Sql>
+
+						<BindTo>data_gvNutzung</BindTo>
+
+						<HeaderText From="ART_TABELLE_TEXT" To="Nutzungsart"/>
+						<HeaderText From="X_SUBTYPE_VALUE" To="Unterart"/>
+						<HeaderText From="X_AREA_INTERSECTION" To="Schnittfläche [m²]"/>
+						<HeaderText From="FLAECHEANTEIL" To="Anteil in %"/>
+
+						<JavaScriptClick>
+							<Column>objektart_name</Column>
+							<JsFn><![CDATA[
+								zoomToFilter({layerName : 'sg_nutzung_f', filter : 'objectid = %gid%', doZoom : false}); return false;
+								/*zoomToFilter({layerName : 'tg_nutzung', filter : 'gid = %gid%', doZoom : false}); return false;*/
+							]]></JsFn>
+						 </JavaScriptClick>
 					</Bindings>
-					
+
+
 					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\AX_FLURSTUECK</ItemTemplate>
 				</Panel>
 
-				<!-- Buchungsstellen/-blätter -->
+
+
+				<!--
+				Buchungsstellen/-blätter
+				Buchungsblätter des Flurstücks
+				-->
 				<Panel>
 					<Caption>Buchungsstellen/-blätter</Caption>
+					<Authorisation>AX_BUCHUNGSBLATT</Authorisation>
 					<Query>
-						<Name>BUCHUNGSSTELLEN</Name>
+						<Name>V_BUCHUNGSBLATT_FS</Name>
 						<Parent>AX_FLURSTUECK</Parent>
+
 						<Sql><![CDATA[
-							SELECT
-							   Distinct(me.I_BSID) AS BSID
-								, bs.LAUFENDENUMMER
-								, bs.ANTEIL_ZAEHLER
-								, bs.ANTEIL_NENNER
-								, bs.LZB
-								, bs.buchungsart
-								, tbdBuchungsArt.VALUE as buchungsart_VALUE
-							FROM me_fs_bb me
-							LEFT JOIN ax_buchungsstelle bs on (bs.LZE is null and me.I_BSID = bs.ID)
-							LEFT JOIN ax_buchungsart_tbd tbdBuchungsArt on(tbdBuchungsArt.SHORT_VALUE = bs.buchungsart)
-							WHERE me.FSID = '{ID}'
-							ORDER BY bs.LAUFENDENUMMER
+
+								SELECT
+									Distinct(me.I_BSID) AS BSID
+									, bs.LAUFENDENUMMER
+									, bs.ANTEIL_ZAEHLER
+									, bs.ANTEIL_NENNER
+									, bs.LZB
+									, bs.buchungsart
+									, tbdBuchungsArt.VALUE as buchungsart_VALUE
+								FROM me_fs_bb me
+									LEFT JOIN ax_buchungsstelle bs on (bs.LZE is null and me.I_BSID = bs.ID)
+									LEFT JOIN ax_buchungsart_tbd tbdBuchungsArt on(tbdBuchungsArt.SHORT_VALUE = bs.buchungsart)
+								WHERE me.FSID = '{ID}'
+								ORDER BY bs.LAUFENDENUMMER
 						]]></Sql>
+
 					</Query>
 
 					<Bindings>
 						<Sql><![CDATA[
+
 							SELECT
-							bb.BUCHUNGSBLATTKENNZEICHEN,
-							bb.BUCHUNGSBLATTNUMMERMITBUCH,
-							bb.BLATTART,
-							bbBezirk.SCHLUESSELGESAMT as BB_BEZIRK_KEY,
-							bbBezirk.BEZEICHNUNG as BB_BEZIRK_VALUE,
-							(bbBezirk.SCHLUESSELGESAMT || '/' || bbBezirk.BEZEICHNUNG) as BB_BEZIRK_SCHL_VALUE,
-							tbdBlattart.VALUE as BLATTART_VALUE,
-							(bb.BLATTART || '/' || tbdBlattart.VALUE) as BLATTART_SCHL_VALUE
+								bb.BUCHUNGSBLATTKENNZEICHEN,
+								(bbBezirk.SCHLUESSELGESAMT || '/' || bbBezirk.BEZEICHNUNG) as BB_BEZIRK_SCHL_VALUE,
+								bb.BUCHUNGSBLATTNUMMERMITBUCH,
+								bb.BLATTART,
+								bbBezirk.SCHLUESSELGESAMT as BB_BEZIRK_KEY,
+								bbBezirk.BEZEICHNUNG as BB_BEZIRK_VALUE,
+
+								tbdBlattart.VALUE as BLATTART_VALUE,
+								(bb.BLATTART || '/' || tbdBlattart.VALUE) as BLATTART_SCHL_VALUE
 							FROM me_bs_bb me
 							 LEFT JOIN ax_buchungsblatt bb on (bb.LZE is null and bb.id = me.BBID)
 							 LEFT OUTER JOIN AX_BUCHUNGSBLATTBEZIRK bbBezirk ON (bbBezirk.SCHLUESSEL = bb.BUCHUNGSBLATTBEZIRK)
 							LEFT OUTER JOIN AX_BLATTART_TBD tbdBlattart ON(tbdBlattart.SHORT_VALUE = bb.BLATTART)
 							WHERE me.bsid = '{BSID}'
 						]]></Sql>
-						<BindTo>dataBS_BUCHUNGSBLATT</BindTo>
-						<HeaderText From="BUCHUNGSBLATTKENNZEICHEN" To="Buchungsblatt"/>
-						<HeaderText From="BB_BEZIRK_SCHL_VALUE" To="Buchungsblattbezirk"/>
-						<HeaderText From="BUCHUNGSBLATTNUMMERMITBUCH" To="Buchungsblattnummer"/>
-						<HeaderText From="BLATTART_SCHL_VALUE" To="Blattart"/>
+
+						<BindTo>data_gvBuchungsblaetter</BindTo>
+
+						<HeaderText From="buchungsblattkennzeichen" To="Buchungsblatt"/>
+						<HeaderText From="bb_bezirk_schl_value" To="Buchungsblattbezirk"/>
+						<HeaderText From="buchungsblattnummermitbuch" To="Buchungsblattnummer"/>
+						<HeaderText From="blattart_value" To="Blattart"/>
 					</Bindings>
 
-					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\BUCHUNGSSTELLEN</ItemTemplate>
+					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\AX_FLURSTUECK_V_BUCHUNGSBLATT_FS</ItemTemplate>
 				</Panel>
 
-				<!-- Eigentümer nach Buchungsblättern -->
+				<!-- Eigentümer nach Buchungsblättern - V_EIGENTUEMER_FS -->
 				<Panel>
 					<Caption>Eigentümer nach Buchungsblättern</Caption>
+					<Authorisation>AX_PERSON</Authorisation>
+					<HideIfQueryIsEmpty>true</HideIfQueryIsEmpty>
 					<Query>
 						<Name>V_EIGENTUEMER_FS</Name>
 						<Parent>AX_FLURSTUECK</Parent>
-						<Sql><![CDATA[
+						<Sql>
+				  <![CDATA[
 							SELECT
-							me.PEID, me.LAUFENDENUMMERNACHDIN1421,
-							me.ANTEIL_ZAEHLER, me.ANTEIL_NENNER, me.ARTDERRECHTSGEMEINSCHAFT, me.EIGENTUEMERART,
-							pe.AKADEMISCHERGRAD, pe.VORNAME, pe.BERUF, pe.NACHNAMEODERFIRMA, pe.GEBURTSNAME,
-							pe.NAMENSBESTANDTEIL, pe.GEBURTSDATUM, pe.WOHNORTODERSITZ, pe.HAUSHALTSSTELLELANDESGRUND, pe.SONSTIGEEIGENSCHAFTEN,
-							b.VALUE as EIGENTUEMERART_VALUE,
-							c.VALUE as ANREDE_VALUE,
-							d.VALUE as BUCHUNGSART_VALUE,
-							e.BUCHUNGSBLATTKENNZEICHEN, e.BUCHUNGSBLATTBEZIRK, e.BUCHUNGSBLATTNUMMERMITBUCH,
-							f.SCHLUESSELGESAMT as BB_BEZIRK_KEY, f.BEZEICHNUNG AS BB_BEZIRK_VALUE,
-							bs.ANTEIL_ZAEHLER as BS_ANTEIL_ZAEHLER, bs.ANTEIL_NENNER as BS_ANTEIL_NENNER
+								me.PEID, me.LAUFENDENUMMERNACHDIN1421,
+								me.ANTEIL_ZAEHLER, me.ANTEIL_NENNER, me.ARTDERRECHTSGEMEINSCHAFT, me.EIGENTUEMERART,
+								pe.AKADEMISCHERGRAD, pe.VORNAME, pe.BERUF, pe.NACHNAMEODERFIRMA, pe.GEBURTSNAME,
+								pe.NAMENSBESTANDTEIL, pe.GEBURTSDATUM, pe.WOHNORTODERSITZ, pe.HAUSHALTSSTELLELANDESGRUND, pe.SONSTIGEEIGENSCHAFTEN,
+								b.VALUE as EIGENTUEMERART_VALUE,
+								c.VALUE as ANREDE_VALUE,
+								d.VALUE as BUCHUNGSART_VALUE,
+								e.BUCHUNGSBLATTKENNZEICHEN, e.BUCHUNGSBLATTBEZIRK, e.BUCHUNGSBLATTNUMMERMITBUCH,
+								f.SCHLUESSELGESAMT as BB_BEZIRK_KEY, f.BEZEICHNUNG AS BB_BEZIRK_VALUE,
+								bs.ANTEIL_ZAEHLER as BS_ANTEIL_ZAEHLER, bs.ANTEIL_NENNER as BS_ANTEIL_NENNER
 							FROM ME_FS_PE me
-							--left outer JOIN AX_FLURSTUECK fs on fs.ID = me.FSID AND fs.LZE is null
-							inner JOIN AX_PERSON pe on pe.ID = me.PEID AND pe.LZE is null
-							LEFT OUTER JOIN AX_EIGENTUEMERART_TBD b ON ( b.SHORT_VALUE = me.EIGENTUEMERART )
-							LEFT OUTER JOIN AX_ANREDE_PERSON_TBD c ON ( c.SHORT_VALUE = pe.ANREDE )
-							LEFT OUTER JOIN AX_BUCHUNGSART_TBD d ON ( d.SHORT_VALUE = me.I_BUART )
-							LEFT OUTER JOIN AX_BUCHUNGSBLATT e ON ( e.ID = me.BBID )
-							LEFT OUTER JOIN AX_BUCHUNGSBLATTBEZIRK f ON ( f.SCHLUESSEL = e.BUCHUNGSBLATTBEZIRK )
-							LEFT OUTER JOIN ME_BZ mebz ON (mebz.TABELLE = 'AX_Flurstueck' AND mebz.LZE is null AND mebz.ART = 'istGebucht' AND mebz.ID = me.FSID)
-							INNER JOIN AX_BUCHUNGSSTELLE bs ON mebz.ZID = bs.ID AND bs.LZE IS NULL
+								--left outer JOIN AX_FLURSTUECK fs on fs.ID = me.FSID AND fs.LZE is null
+								inner JOIN AX_PERSON pe on pe.ID = me.PEID AND pe.LZE is null
+								LEFT OUTER JOIN AX_EIGENTUEMERART_TBD b ON ( b.SHORT_VALUE = me.EIGENTUEMERART )
+								LEFT OUTER JOIN AX_ANREDE_PERSON_TBD c ON ( c.SHORT_VALUE = pe.ANREDE )
+								LEFT OUTER JOIN AX_BUCHUNGSART_TBD d ON ( d.SHORT_VALUE = me.I_BUART )
+								LEFT OUTER JOIN AX_BUCHUNGSBLATT e ON ( e.ID = me.BBID )
+								LEFT OUTER JOIN AX_BUCHUNGSBLATTBEZIRK f ON ( f.SCHLUESSEL = e.BUCHUNGSBLATTBEZIRK )
+								LEFT OUTER JOIN ME_BZ mebz ON (mebz.TABELLE = 'AX_Flurstueck' AND mebz.LZE is null AND mebz.ART = 'istGebucht' AND mebz.ID = me.FSID)
+								INNER JOIN AX_BUCHUNGSSTELLE bs ON mebz.ZID = bs.ID AND bs.LZE IS NULL
 							WHERE me.FSID = '{ID}'
 							ORDER BY e.BUCHUNGSBLATTKENNZEICHEN ASC , LAUFENDENUMMERNACHDIN1421
 						]]></Sql>
@@ -208,76 +299,129 @@
 						<HeaderText From="POSTFACH" To="Postfach"/>
 					</Bindings>
 
-					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\V_EIGENTUEMER_FS</ItemTemplate>
+					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\AX_FLURSTUECK_V_EIGENTUEMER_FS</ItemTemplate>
+					<!--
+
+					<NoItemTemplate>
+						<ColumnNameTranslation From="LAUFENDENUMMERNACHDIN1421" To="Lfd. Nummer nach DIN1421"/>
+					</NoItemTemplate>
+					-->
 				</Panel>
-				
-				<!-- Buchungsblätter des Flurstücks -->
+
+				<!-- Buchungsblätter des Flurstücks - V_BUCHUNGSBLATT_FS
 				<Panel>
 					<Caption>Buchungsblätter</Caption>
+					<Authorisation>AX_BUCHUNGSBLATT</Authorisation>
+					<HideIfQueryIsEmpty>true</HideIfQueryIsEmpty>
 					<Query>
 						<Name>V_BUCHUNGSBLATT_FS</Name>
 						<Parent>AX_FLURSTUECK</Parent>
-						
 						<Sql><![CDATA[
-							select
-							distinct(me.I_BBID),
-							bb.*,
-							tbdAnlass1.VALUE as ANLASS1_VALUE,
-							tbdAnlass2.VALUE as ANLASS2_VALUE,
-							tbdBlattart.VALUE as BLATTART_VALUE,
-							bbBezirk.SCHLUESSELGESAMT as BB_BEZIRK_KEY,
-							bbBezirk.BEZEICHNUNG as BB_BEZIRK_VALUE
-							from me_fs_bb me
-							left join ax_buchungsblatt bb on ( bb.LZE is null and bb.id = me.I_BBID )
-							LEFT OUTER JOIN AX_BLATTART_TBD tbdBlattart ON ( tbdBlattart.SHORT_VALUE = bb.BLATTART )
-							LEFT OUTER JOIN AX_BUCHUNGSBLATTBEZIRK bbBezirk ON ( bbBezirk.SCHLUESSEL = bb.BUCHUNGSBLATTBEZIRK )
-							LEFT OUTER JOIN AA_ANLASSART_TBD tbdAnlass1 ON ( tbdAnlass1.SHORT_VALUE = bb.ANLASS1 )
-							LEFT OUTER JOIN AA_ANLASSART_TBD tbdAnlass2 ON ( tbdAnlass2.SHORT_VALUE = bb.ANLASS2 )
-							where fsid = '{ID}'
-							order by BUCHUNGSBLATTKENNZEICHEN asc
+
+								SELECT
+									Distinct(me.I_BSID) AS BSID
+									, bs.LAUFENDENUMMER
+									, bs.ANTEIL_ZAEHLER
+									, bs.ANTEIL_NENNER
+									, bs.LZB
+									, bs.buchungsart
+									, tbdBuchungsArt.VALUE as buchungsart_VALUE
+								FROM me_fs_bb me
+									LEFT JOIN ax_buchungsstelle bs on (bs.LZE is null and me.I_BSID = bs.ID)
+									LEFT JOIN ax_buchungsart_tbd tbdBuchungsArt on(tbdBuchungsArt.SHORT_VALUE = bs.buchungsart)
+								WHERE me.FSID = '{ID}'
+								ORDER BY bs.LAUFENDENUMMER
 						]]></Sql>
 					</Query>
 
 					<Bindings>
 						<Sql><![CDATA[
-							SELECT * FROM AX_Namensnummer WHERE ID_BB = '{ID}' AND BESCHRIEBDERRECHTSGEMEINSC is not NULL ORDER BY BESCHRIEBDERRECHTSGEMEINSC asc
+
+							SELECT
+								bb.BUCHUNGSBLATTKENNZEICHEN,
+								(bbBezirk.SCHLUESSELGESAMT || '/' || bbBezirk.BEZEICHNUNG) as BB_BEZIRK_SCHL_VALUE,
+								bb.BUCHUNGSBLATTNUMMERMITBUCH,
+								bb.BLATTART,
+								bbBezirk.SCHLUESSELGESAMT as BB_BEZIRK_KEY,
+								bbBezirk.BEZEICHNUNG as BB_BEZIRK_VALUE,
+
+								tbdBlattart.VALUE as BLATTART_VALUE,
+								(bb.BLATTART || '/' || tbdBlattart.VALUE) as BLATTART_SCHL_VALUE
+							FROM me_bs_bb me
+							 LEFT JOIN ax_buchungsblatt bb on (bb.LZE is null and bb.id = me.BBID)
+							 LEFT OUTER JOIN AX_BUCHUNGSBLATTBEZIRK bbBezirk ON (bbBezirk.SCHLUESSEL = bb.BUCHUNGSBLATTBEZIRK)
+							LEFT OUTER JOIN AX_BLATTART_TBD tbdBlattart ON(tbdBlattart.SHORT_VALUE = bb.BLATTART)
+							WHERE me.bsid = '{BSID}'
 						]]></Sql>
-						<BindTo>gv_BESCHRIEBDERRECHTSGEMEINSC</BindTo>
-						<HeaderText From="BESCHRIEBDERRECHTSGEMEINSC" To="Beschreibung der Rechtsgemeinschaft"/>
+
+						<BindTo>data_gvBuchungsblaetter</BindTo>
+
+						<HeaderText From="buchungsblattkennzeichen" To="Buchungsblatt"/>
+						<HeaderText From="bb_bezirk_schl_value" To="Buchungsblattbezirk"/>
+						<HeaderText From="buchungsblattnummermitbuch" To="Buchungsblattnummer"/>
+						<HeaderText From="blattart_value" To="Blattart"/>
 					</Bindings>
+
+					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\AX_FLURSTUECK_V_BUCHUNGSBLATT_FS</ItemTemplate>
+				</Panel>
+				-->
+				<!-- Buchungsstellen
+				<Panel>
+					<Caption>Buchungsstellen</Caption>
+					<Authorisation>AX_BUCHUNGSBLATT</Authorisation>
+					<HideIfQueryIsEmpty>true</HideIfQueryIsEmpty>
+					<ShowDatacount>false</ShowDatacount>
+					<Query>
+						<Name>AX_BUCHUNGSSTELLEN</Name>
+						<Parent>AX_FLURSTUECK</Parent>
+						<Sql><![CDATA[
+							select id
+							from AX_FLURSTUECK
+							where ID = '{ID}'
+						]]></Sql>
+					</Query>
 
 					<Bindings>
 						<Sql><![CDATA[
 							select
-							bs.LAUFENDENUMMER,
-							tbdBuchungsArt.VALUE as buchungsart_VALUE,
-							tbdAnlass1.VALUE as ANLASS1_VALUE,
-							tbdAnlass2.VALUE as ANLASS2_VALUE,
-							concat(bs.ANTEIL_ZAEHLER::int , concat('/' , bs.ANTEIL_NENNER::int)) as ZAEHLER_NENNER,
-							bs.NUMMERIMAUFTEILUNGSPLAN
-							from AX_BUCHUNGSSTELLE bs
-							left join ax_buchungsart_tbd tbdBuchungsArt on ( tbdBuchungsArt.SHORT_VALUE = bs.buchungsart )
-							LEFT OUTER JOIN AA_ANLASSART_TBD tbdAnlass1 ON ( tbdAnlass1.SHORT_VALUE = bs.ANLASS1 )
-							LEFT OUTER JOIN AA_ANLASSART_TBD tbdAnlass2 ON ( tbdAnlass2.SHORT_VALUE = bs.ANLASS2 )
-							where ID_BB = '{ID}' and bs.LZE is NULL
-							order by bs.LAUFENDENUMMER
+								distinct(bs.ID),
+								bb.BUCHUNGSBLATTKENNZEICHEN,
+								bs.LAUFENDENUMMER,
+								concat(bs.ANTEIL_ZAEHLER , concat('/' , bs.ANTEIL_NENNER)) as ZAEHLER_NENNER,
+								tbdBuchungsArt.VALUE as buchungsart_VALUE,
+								tbdAnlass1.VALUE as ANLASS1_VALUE
+							from me_fs_bb me
+								left join ax_buchungsblatt bb on ( bb.LZE is null and bb.id = me.I_BBID )
+								left join ax_buchungsstelle bs on ( bs.LZE is null and bs.ID_BB = bb.ID )
+
+								left join ax_buchungsart_tbd tbdBuchungsArt on ( tbdBuchungsArt.SHORT_VALUE = bs.buchungsart )
+								left outer join AA_ANLASSART_TBD tbdAnlass1 ON ( tbdAnlass1.SHORT_VALUE = bs.ANLASS1 )
+								left outer join AA_ANLASSART_TBD tbdAnlass2 ON ( tbdAnlass2.SHORT_VALUE = bs.ANLASS2 )
+
+							where me.FSID = '{ID}'
+							order by bb.BUCHUNGSBLATTKENNZEICHEN, bs.LAUFENDENUMMER
 						]]></Sql>
-						<BindTo>gv_AX_BUCHUNGSSTELLE</BindTo>
+
+						<BindTo>dataAX_BUCHUNGSSTELLE</BindTo>
+						<HeaderText From="BUCHUNGSBLATTKENNZEICHEN" To="Buchungsblatt"/>
 						<HeaderText From="LAUFENDENUMMER" To="Lfd.-Nr."/>
-						<HeaderText From="buchungsart_VALUE" To="Buchungsart"/>
-						<HeaderText From="ANLASS1_VALUE" To="Anlass"/>
-						<HeaderText From="ZAEHLER_NENNER" To="Anteil"/>
-						<HeaderText From="NUMMERIMAUFTEILUNGSPLAN" To="Nr. im Aufteilungsplan"/>
+						<HeaderText From="buchungsart_VALUE" To="Buchungsart" />
+						<HeaderText From="ANLASS1_VALUE" To="Anlass" />
+						<HeaderText From="ZAEHLER_NENNER" To="Anteil" />
+						<HeaderText From="NUMMERIMAUFTEILUNGSPLAN" To="Nr. im Aufteilungsplan" />
 					</Bindings>
 
-					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\V_BUCHUNGSBLATT_FS</ItemTemplate>
+					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\AX_FLURSTUECK_BUCHUNGSSTELLEN</ItemTemplate>
 				</Panel>
+				-->
 
 				<!-- Buchgrundstück -->
 				<Panel>
 					<Caption>Buchgrundstück</Caption>
+					<Authorisation>AX_BUCHUNGSBLATT</Authorisation>
+					<HideIfQueryIsEmpty>true</HideIfQueryIsEmpty>
 					<Query>
-						<Name>BUCHGRUNDSTUECK</Name>
+						<Name>AX_BUCHGRUNDSTUECK</Name>
 						<Parent>AX_FLURSTUECK</Parent>
 						<Sql><![CDATA[
 							SELECT
@@ -288,18 +432,41 @@
 							 LEFT JOIN me_fs_bb b ON b.I_BBID = a.I_BBID
 							 LEFT JOIN AX_FLURSTUECK c ON(c.ID = b.FSID)
 							 LEFT JOIN AX_GEMARKUNG ON (AX_GEMARKUNG.LZE is NULL and AX_GEMARKUNG.SCHLUESSEL = c.GEMARKUNG)
-							WHERE a.FSID = '{ID}'
-							AND a.direkt = 1
+							WHERE a.FSID = '{ID}' and a.direkt = 1
 							ORDER BY c.FLURSTUECKSKENNZEICHEN
 						]]></Sql>
 					</Query>
 
-					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\BUCHGRUNDSTUECK</ItemTemplate>
+
+
+					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\AX_FLURSTUECK_BUCHGRUNDSTUECK</ItemTemplate>
 				</Panel>
 
-				<!-- Lagebezeichnungen des Flurstücks -->
+				<!-- Sondereinträge
+				<Panel>
+					<Caption>Sondereinträge</Caption>
+					<Authorisation>SG_SONDEREINTRAEGE</Authorisation>
+					<Query>
+						<Name>sg_sondereintraege</Name>
+						<Parent>AX_FLURSTUECK</Parent>
+						<Sql><![CDATA[
+							SELECT
+								a.*,
+								b.bedeutung as TYP_TBD_VALUE
+							FROM 	sg_sondereintraege a
+							LEFT JOIN sg_sondereintraege_domain b ON b.fk_id = a.r_typ
+							WHERE a.flurstueckskennzeichen = '{FLURSTUECKSKENNZEICHEN}'
+						]]></Sql>
+					</Query>
+					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\AX_FLURSTUECK_SGA_SONDEREINTRAEGE</ItemTemplate>
+					<FooterTemplate>FooterTemplates\TG_FLURSTUECK\SG_SONDEREINTRAEGE</FooterTemplate>
+				</Panel>
+				-->
+				<!-- Lagebezeichnungen des Flurstücks - V_LAGEBEZEICHNUNG_FS -->
 				<Panel>
 					<Caption>Lagebezeichnungen</Caption>
+					<!--<Authorisation>AX_LAGEBEZEICHNUNGMITHNR,AX_LAGEBEZEICHNUNGOHNEHNR</Authorisation>-->
+					<Authorisation/>
 					<Query>
 						<Name>V_LAGEBEZEICHNUNG_FS</Name>
 						<Parent>AX_FLURSTUECK</Parent>
@@ -313,60 +480,115 @@
 								a.UNVERSCHLUESSELT,
 								d.BEZEICHNUNG as UNVERSCHLUESSELT2
 							FROM (
-								select
-									bz.FID FID, f.FID FID_FS,
-									lbm.ANLASS1, lbm.ANLASS2, lbm.UNVERSCHLUESSELT, lbm.VERSCHLUESSELT, lbm.ORTSTEIL, lbm.HAUSNUMMER,
-									null ZUSATZZURLAGEBEZEICHNUNG
-								FROM AX_LAGEBEZEICHNUNGMITHNR lbm
-									inner JOIN ME_BZ bz on bz.ZID = lbm.ID AND bz.LZE is null
-									inner JOIN AX_FLURSTUECK f on f.ID = bz.ID AND f.LZE is null
-								WHERE lbm.LZE is null
-								union
-								select
-									bz.FID FID, f.FID FID_FS ,
-									lbo.ANLASS1, lbo.ANLASS2, lbo.UNVERSCHLUESSELT, lbo.VERSCHLUESSELT, lbo.ORTSTEIL, null HAUSNUMMER,
-									lbo.ZUSATZZURLAGEBEZEICHNUNG
-								FROM AX_LAGEBEZEICHNUNGOHNEHNR lbo
-									inner JOIN ME_BZ bz on bz.ZID = lbo.ID AND bz.LZE is null
-									inner JOIN AX_FLURSTUECK f on f.ID = bz.ID AND f.LZE is null
-								WHERE lbo.LZE is null
+								SELECT f.fid,
+									f.fid AS fid_fs,
+									lbm.anlass1,
+									lbm.anlass2,
+									lbm.unverschluesselt,
+									lbm.verschluesselt,
+									lbm.ortsteil,
+									lbm.hausnummer,
+									NULL AS zusatzzurlagebezeichnung
+								   FROM ax_lagebezeichnungmithnr lbm
+									 JOIN me_bz bz ON bz.zid = lbm.id AND bz.lze IS NULL
+									 JOIN ax_flurstueck f ON bz.id = f.id AND bz.lzb = f.lzb AND f.lze IS NULL
+								  WHERE lbm.lze IS NULL
+								UNION
+								 SELECT f.fid,
+									f.fid AS fid_fs,
+									lbo.anlass1,
+									lbo.anlass2,
+									lbo.unverschluesselt,
+									lbo.verschluesselt,
+									lbo.ortsteil,
+									NULL AS hausnummer,
+									lbo.zusatzzurlagebezeichnung
+								   FROM ax_lagebezeichnungohnehnr lbo
+									 JOIN me_bz bz ON bz.zid = lbo.id AND bz.lze IS NULL
+									 JOIN ax_flurstueck f ON bz.id = f.id AND bz.lzb = f.lzb AND f.lze IS NULL
+								  WHERE lbo.lze IS NULL
 							) a
-								LEFT JOIN AX_KREISREGION ON ( AX_KREISREGION.SCHLUESSEL = SUBSTR(a.VERSCHLUESSELT, 1, LENGTH(AX_KREISREGION.SCHLUESSEL)) )
-								LEFT JOIN AX_GEMEINDE ON ( AX_GEMEINDE.GEMEINDEKENNZEICHEN = SUBSTR(a.VERSCHLUESSELT, 1, LENGTH(AX_GEMEINDE.GEMEINDEKENNZEICHEN)) )
-								LEFT OUTER JOIN ax_lagebezkateintrag d ON ( d.SCHLUESSEL = a.VERSCHLUESSELT )
+								LEFT JOIN AX_KREISREGION ON ( AX_KREISREGION.SCHLUESSEL = SUBSTR(a.VERSCHLUESSELT, 1, LENGTH(AX_KREISREGION.SCHLUESSEL)) AND AX_KREISREGION.LZE IS NULL)
+								LEFT JOIN AX_GEMEINDE ON ( AX_GEMEINDE.GEMEINDEKENNZEICHEN = SUBSTR(a.VERSCHLUESSELT, 1, LENGTH(AX_GEMEINDE.GEMEINDEKENNZEICHEN))  AND AX_GEMEINDE.LZE IS NULL)
+								LEFT OUTER JOIN ax_lagebezkateintrag d ON ( d.SCHLUESSEL = a.VERSCHLUESSELT AND d.LZE IS NULL)
 							WHERE a.FID_FS = {FID}
 						]]></Sql>
 					</Query>
+					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\AX_FLURSTUECK_V_LAGEBEZEICHNUNG_FS</ItemTemplate>
 
-					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\V_LAGEBEZEICHNUNG_FS</ItemTemplate>
 				</Panel>
 
-				<!-- Nutzungsarten des Flurstücks / Verschneidung EX_TATSAECHLICHENUTZUNG -->
+				<!-- Nutzungsarten - EX_FSTNUTZUNG -->
 				<Panel>
 					<Caption>Nutzungsarten</Caption>
+					<Authorisation/>
 					<Query>
-						<Name>SDO_RELATE_NUTZART</Name>
+						<Name>EX_FSTNUTZUNG</Name>
 						<Parent>AX_FLURSTUECK</Parent>
 						<Sql><![CDATA[
 							SELECT
-							  a.NUTZ_ID, a.ID, a.FID, a.AREA AS X_AREA_INTERSECTION,
-							  ROUND(((AX_FLURSTUECK.AMTLICHEFLAECHE * a.FLAECHEANTEIL)/100)) as TFL_AMTLICH,
-							  100*(ROUND(((AX_FLURSTUECK.AMTLICHEFLAECHE * a.FLAECHEANTEIL)/100)))/AMTLICHEFLAECHE AS AMTL_FLAECHEANTEIL,
-							  a.FLAECHEANTEIL,
-							  AX_FLURSTUECK.AMTLICHEFLAECHE,
-							  AX_FLURSTUECK.AREA AS X_AREA_SOURCE,
-							  b.VALUE AS X_SUBTYPE_VALUE,
-							  c.VALUE AS ART_TABELLE_TEXT
+								ex_nutz.fid,
+								a.NUTZ_ID, a.FST_ID, a.AREA AS X_AREA_INTERSECTION,
+								ROUND(((AX_FLURSTUECK.AMTLICHEFLAECHE * a.FLAECHEANTEIL) / 100)) as TFL_AMTLICH,
+								100 * (ROUND(((AX_FLURSTUECK.AMTLICHEFLAECHE * a.FLAECHEANTEIL) / 100))) / AMTLICHEFLAECHE AS AMTL_FLAECHEANTEIL,
+								a.FLAECHEANTEIL,
+								AX_FLURSTUECK.AMTLICHEFLAECHE,
+								AX_FLURSTUECK.AREA AS X_AREA_SOURCE,
+								b.VALUE AS X_SUBTYPE_VALUE,
+								c.VALUE AS ART_TABELLE_TEXT
 							FROM AX_FLURSTUECK
-							  LEFT JOIN EX_FSTNUTZUNG a ON ( a.FST_ID = AX_FLURSTUECK.ID )
-							  LEFT JOIN EX_NUTZUNG_EX_TBD b ON ( b.SHORT_VALUE = a.EIG1 )
-							  LEFT JOIN EX_NUTZUNGART_TBD c ON ( c.SHORT_VALUE = a.ART_TABELLE )
-							WHERE AX_FLURSTUECK.FID = {FID}
+								LEFT JOIN EX_FSTNUTZUNG a ON(a.FST_ID = AX_FLURSTUECK.ID)
+								LEFT JOIN EX_NUTZUNGART_TBD c ON(c.SHORT_VALUE = a.ART_TABELLE)
+								LEFT JOIN EX_TATSAECHLICHENUTZUNG ex_nutz ON ex_nutz.ID = a.NUTZ_ID
+								LEFT JOIN EX_NUTZUNG_EX_TBD b ON(b.SHORT_VALUE = ex_nutz.FUNKTION)
+							WHERE
+								AX_FLURSTUECK.FID = {FID}
 							ORDER BY a.AREA desc
 						]]></Sql>
+
+						<ShowInMap>
+							<LayerFeatureClassName>EX_FSTNUTZUNG</LayerFeatureClassName>
+							<BindTo>lnkBtnShowInMap</BindTo>
+						</ShowInMap>
 					</Query>
 
-					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\SDO_RELATE_NUTZART</ItemTemplate>
+					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\AX_FLURSTUECK_EX_FSTNUTZUNG</ItemTemplate>
+				</Panel>
+
+				<!-- SDO_RELATE_AX_GEBAEUDE - SDO_RELATE_AX_GEBAEUDE -->
+				<Panel>
+					<Caption>Gebäude</Caption>
+					<Authorisation/>
+					<HideIfQueryIsEmpty>true</HideIfQueryIsEmpty>
+					<Query>
+						<Name>SDO_RELATE_AX_GEBAEUDE</Name>
+						<Parent>AX_FLURSTUECK</Parent>
+						<Intersection>
+							<TargetFeatureClass>AX_GEBAEUDE</TargetFeatureClass>
+							<OrderBy>X_AREA_INTERSECTION ASC</OrderBy>
+							<Filter>X_AREA_INTERSECTION >= 0.1</Filter>
+							<Property>GEBAEUDEKENNZEICHEN</Property>
+							<Translation>
+								<Sql><![CDATA[SELECT * FROM AX_DACHFORM_TBD]]></Sql>
+								<FromColumn>DACHFORM</FromColumn>
+								<ValueColumn>VALUE</ValueColumn>
+								<IdColumn>SHORT_VALUE</IdColumn>
+							</Translation>
+							<Translation>
+								<Sql><![CDATA[SELECT * FROM AX_GEBAEUDEFUNKTION_TBD]]></Sql>
+								<FromColumn>GEBAEUDEFUNKTION</FromColumn>
+								<ValueColumn>VALUE</ValueColumn>
+								<IdColumn>SHORT_VALUE</IdColumn>
+							</Translation>
+						</Intersection>
+
+						<ShowInMap>
+							<LayerFeatureClassName>AX_GEBAEUDE</LayerFeatureClassName>
+							<BindTo>lnkBtnShowInMap</BindTo>
+						</ShowInMap>
+					</Query>
+
+					<ItemTemplate>ItemTemplates\AX_FLURSTUECK\AX_FLURSTUECK_SDO_RELATE_AX_GEBAEUDE</ItemTemplate>
 				</Panel>
 			</Panels>
 		</InfoTemplate>

@@ -21,39 +21,19 @@ class AX_FLURSTUECK(DialogItem):
         self.labelFlurZaehlerNenner = QLabel()
         self.labelFlaecheKarte = QLabel()
         self.labelFlurstueckKennzeichen = QLabel()
-        self.labelRechtesbehelfsVerfahren = QLabel()
-        self.labelFlurstueckFolge = QLabel()
-        self.labelAbweichenderRechtszustand = QLabel()
-        self.labelZustaendigeStelle = QLabel()
-        self.labelFlurstueckNachweis = QLabel()
-        self.labelAnlass1 = QLabel()
-        self.labelAnlass2 = QLabel()
-        # self.labelBuchungsstelle = QLabel()
-        # self.labelFid = QLabel()
         self.labelAlkisId = QLabel()
-        # self.labelLetzteAusleitung = QLabel()
 
         self.setLayout(QFormLayout())
         self.layout().setHorizontalSpacing(64)
 
-        self.layout().addRow("Gemeindezugehörigkeit:", self.labelGemeindeZugehoerigkeit)
+        self.layout().addRow("Flurstückskennzeichen:", self.labelFlurstueckKennzeichen)
+        self.layout().addRow("Gemeinde:", self.labelGemeindeZugehoerigkeit)
         self.layout().addRow("Gemarkung:", self.labelGemarkung)
         self.layout().addRow("Flur / Zähler / Nenner:", self.labelFlurZaehlerNenner)
-        self.layout().addRow("Flurstückskennzeichen:", self.labelFlurstueckKennzeichen)
-        self.layout().addRow("Flurstücksfolge:", self.labelFlurstueckFolge)
-        self.layout().addRow("zuständige Stelle:", self.labelZustaendigeStelle)
-        self.layout().addRow("Anlass1:", self.labelAnlass1)
-        self.layout().addRow("Anlass2:", self.labelAnlass2)
         self.layout().addRow("Entstehung:", self.labelEntstehung)
         self.layout().addRow("amtliche Fläche [m²]:", self.labelamtlicheFlaeche)
         self.layout().addRow("Fläche in der Karte [m²]:", self.labelFlaecheKarte)
-        self.layout().addRow("Rechtsbehelfsverfahren:", self.labelRechtesbehelfsVerfahren)
-        self.layout().addRow("abweichender Rechtszustand:", self.labelAbweichenderRechtszustand)
-        self.layout().addRow("zweifelhafter Flurstücksnachweis:", self.labelFlurstueckNachweis)
-        # self.layout().addRow("Buchungsstelle:", self.labelBuchungsstelle)
-        # self.layout().addRow("FID:", self.labelFid)
         self.layout().addRow("Alkis-ID:", self.labelAlkisId)
-        # self.layout().addRow("Letzte Ausleitung:", self.labelLetzteAusleitung)
 
         for i in range(self.layout().rowCount()):
             item = self.layout().itemAt(i, QFormLayout.LabelRole)
@@ -68,13 +48,16 @@ class AX_FLURSTUECK(DialogItem):
                 item.widget().setTextInteractionFlags(item.widget().textInteractionFlags() | Qt.TextSelectableByMouse)
 
         # Bindings
-        self.dataV_LetzteAusleitung = DialogBindingWidget()
-        self.dataV_EIGENTUEMER_DIST_OVERVIEW = DialogBindingWidget()
-        self.dataAX_HISTORISCHESFST = DialogBindingWidget()
+        self.dataLETZTEAUSLEITUNG = DialogBindingWidget()
 
-        self.layout().addRow(self.dataV_LetzteAusleitung)
+        self.dataV_EIGENTUEMER_DIST_OVERVIEW = DialogBindingWidget()
+        self.data_gvNutzung = DialogBindingWidget()
+        self.data_gvLagebezeichnung = DialogBindingWidget()
+
+        self.layout().addRow(self.dataLETZTEAUSLEITUNG)
         self.layout().addRow(self.dataV_EIGENTUEMER_DIST_OVERVIEW)
-        self.layout().addRow(self.dataAX_HISTORISCHESFST)
+        self.layout().addRow(self.data_gvNutzung)
+        self.layout().addRow(self.data_gvLagebezeichnung)
 
     def set_label_texts(self):
         self.labelGemeindeZugehoerigkeit.setText(
@@ -89,61 +72,25 @@ class AX_FLURSTUECK(DialogItem):
             f"{self.get_value('gemarkungschluessel')}/{self.get_value('gemarkungbezeichnung')}"
         )
 
-        amtlicheflaeche = self.get_value('amtlicheflaeche')
         self.labelamtlicheFlaeche.setText(
-            f"{commonfunctions.get_formatted_string(amtlicheflaeche)}"
+            f"{commonfunctions.get_formatted_string(self.get_value('amtlicheflaeche'), 2)}"
         )
 
         self.labelFlurZaehlerNenner.setText(
             f"{self.get_value('flurnummer')}/{self.get_value('flurstuecksnummer_zaehler')}/{self.get_value('flurstuecksnummer_nenner')}"
         )
 
-        area = self.get_value('area')
         self.labelFlaecheKarte.setText(
-            f"{commonfunctions.get_formatted_string(area)} "
-            f"(Abweichung: {str(commonfunctions.get_diff_in_perc(amtlicheflaeche, area, 2)).replace('.', ',')}%)"
+            f"{commonfunctions.get_formatted_string(self.get_value('area'), 2)} "
+            f"(Abweichung: "
+            f"{str(commonfunctions.get_formatted_string(self.get_value('x_area_diff_perc'), 2))}"
+            f"%)"
         )
 
         self.labelFlurstueckKennzeichen.setText(
             f"{self.get_value('flurstueckskennzeichen')}"
         )
 
-        self.labelRechtesbehelfsVerfahren.setText(
-            f"{self.get_value('xrechtsbehelfsverfahren')}"
-        )
-
-        self.labelFlurstueckFolge.setText(
-            f"{self.get_value('flurstuecksfolge')}"
-        )
-
-        self.labelAbweichenderRechtszustand.setText(
-            f"{self.get_value('xabweichenderrechtszustand')}"
-        )
-
-        self.labelZustaendigeStelle.setText(
-            f"{self.get_value('zustaendigestelle')}/{self.get_value('zustaendigestellebez')}"
-        )
-
-        self.labelFlurstueckNachweis.setText(
-            f"{self.get_value('xzweifelhafterflurstuecksna')}"
-        )
-
-        self.labelAnlass1.setText(
-            f"{self.get_value('anlass1')} - {self.get_value('anlass1_value')}"
-        )
-
-        self.labelAnlass2.setText(
-            f"{self.get_value('anlass2')} - {self.get_value('anlass2_value')}"
-        )
-
-        # self.labelBuchungsstelle.setText("")
-
-        # self.labelFid.setText(
-        #     f"{self.get_value('fid')}"
-        # )
-
         self.labelAlkisId.setText(
             f"{self.get_value('id')}"
         )
-
-        # self.labelLetzteAusleitung.setText("")

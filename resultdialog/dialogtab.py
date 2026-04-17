@@ -58,7 +58,7 @@ class DialogTab(QScrollArea):
 
         self.data = self.context.datasource.select_into_dict_list(sql, null_value_to_none=True)
         if not self.data and self.context.datasource.error_text:
-            loggerutils.log_error(f"Fehler (DialogTab):\n{self.context.datasource.error_text}")
+            loggerutils.log_error(f"Fehler (DialogTab) -> {self.panel.caption} ({name}):\n{self.context.datasource.error_text}")
 
         if name:
             self.context.data_dicts[name] = self.data
@@ -101,10 +101,10 @@ class DialogTab(QScrollArea):
             self.widget().layout().addWidget(item)
             return item
         except ModuleNotFoundError as e:
-            loggerutils.log_error(f"Fehler (DialogTab):\n{str(e)}")
+            loggerutils.log_error(f"Fehler (DialogTab) -> {template[-1]}:\n{str(e)}")
             return -1
         except Exception as e:
-            loggerutils.log_error(f"Fehler (DialogTab):\n{str(e)}")
+            loggerutils.log_error(f"Fehler (DialogTab) -> {template[-1]}:\n{str(e)}")
             return None
 
     def update_items(self):
