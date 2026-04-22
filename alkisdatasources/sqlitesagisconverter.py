@@ -19,6 +19,8 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
         self.flurstueck_primary_key = "fid"
 
         # Geometry columns are set in the database itself (table: 'geometry_columns').
+        # The same column name has to be set in layer_styles.
+        # Style names currently not used. We trust in the automation for now.
         self.tables = {
             "ax_flurstueck": TableInfo("ax_flurstueck", "Flurstücke", "geom", "fid"),
             "ax_gebaeude": TableInfo("ax_gebaeude", "Gebäude", "geom", "fid"),
@@ -66,8 +68,6 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
         if table.table_name in ["ax_flurstueck", "ax_gebaeude"] and self.standard_srs_id:
             subset_string += f" AND srs = {self.standard_srs_id}"
 
-        layer.setSubsetString(subset_string)
-
         if not layer.crs().isValid() and self.standard_crs and self.standard_crs.isValid():
             # Try to use standard CRS set in table ME_KOORDINATEnANGABEN.
             layer.setCrs(self.standard_crs)
@@ -85,8 +85,15 @@ class SqliteSagisConverter(AlkisDataSourceSqlite):
         tree_layer = self.group_basemap.insertLayer(0, layer)
         tree_layer.setExpanded(False)
 
+        # Style workaround. Do not add arrow heads, set the item visibility to False.
+        if table.table_name == "ax_flurstueck_oa" and table.type == "Point":
+            subset_string += f" AND lower(art) != lower('Pfeilspitze')"
+            tree_layer.setItemVisibilityChecked(False)
+
+        layer.setSubsetString(subset_string)
+
         # Load style. Does not always happen automatically.
-        self.load_style(table, layer)
+        # self.load_style(table, layer)
 
         table.layer_id = layer.id()
 
