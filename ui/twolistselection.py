@@ -40,6 +40,8 @@ class TwoListSelection(QWidget):
     ):
         super().__init__(parent)
 
+        self.__default_item_foreground = None
+
         self.__clone = clone
 
         self.__left_list = left_list
@@ -177,6 +179,8 @@ class TwoListSelection(QWidget):
                 item.setFont(font)
 
             self.left_list_widget.addItem(item)
+
+            self.__default_item_foreground = self.__default_item_foreground or item.foreground()
 
         if self.__right_list or self.__fixed_list:
             self.__clone_to_right(init=True)
@@ -354,7 +358,7 @@ class TwoListSelection(QWidget):
             left_item = self.left_list_widget.item(matching_row)
 
             if left_item.flags() & Qt.ItemFlag.ItemIsSelectable != Qt.ItemFlag.ItemIsSelectable:
-                left_item.setForeground(Qt.GlobalColor.black)
+                left_item.setForeground(self.__default_item_foreground)
                 left_item.setFlags(item.flags() | Qt.ItemFlag.ItemIsSelectable)
 
         self.right_count_changed.emit(self.right_list_widget.count())
@@ -385,7 +389,7 @@ class TwoListSelection(QWidget):
         left_item = self.left_list_widget.item(matching_row)
 
         if left_item.flags() & Qt.ItemFlag.ItemIsSelectable != Qt.ItemFlag.ItemIsSelectable:
-            left_item.setForeground(Qt.GlobalColor.black)
+            left_item.setForeground(self.__default_item_foreground)
             left_item.setFlags(item.flags() | Qt.ItemFlag.ItemIsSelectable)
 
             self.right_count_changed.emit(self.right_list_widget.count())

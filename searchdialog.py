@@ -160,6 +160,9 @@ class SearchDialog(QDialog, FORM_CLASS):
     def populate_names(self):
         self.cbName.clear()
 
+        if not self.datasource:
+            return
+
         streets = self.datasource.get_streetnames()
         self.cbName.setToolTip(f"{len(streets)} Datensätze" if len(streets) != 1 else "1 Datensatz")
         if not streets:
@@ -174,6 +177,9 @@ class SearchDialog(QDialog, FORM_CLASS):
     def populate_municipalities(self):
         self.cbMunicipality.clear()
 
+        if not self.datasource:
+            return
+
         municipalities = self.datasource.get_municipalities()
         if not municipalities:
             return
@@ -186,6 +192,9 @@ class SearchDialog(QDialog, FORM_CLASS):
 
     def populate_streets(self):
         self.cbStreet.clear()
+
+        if not self.datasource:
+            return
 
         municipality_id = self.cbMunicipality.currentData()
         if not municipality_id:
@@ -206,6 +215,9 @@ class SearchDialog(QDialog, FORM_CLASS):
     def populate_numbers(self):
         self.cbNumber.clear()
 
+        if not self.datasource:
+            return
+
         street_key = self.cbStreet.currentData()
         if not street_key:
             self.cbNumber.setEnabled(False)
@@ -224,6 +236,9 @@ class SearchDialog(QDialog, FORM_CLASS):
 
     def populate_gemarkung(self):
         self.cbGemarkung.clear()
+
+        if not self.datasource:
+            return
 
         gemarkungen = self.datasource.get_gemarkungen()
         if not gemarkungen:
@@ -267,6 +282,9 @@ class SearchDialog(QDialog, FORM_CLASS):
         searchresulthandler.building_search(value)
 
     def search_flurstueck(self):
+        if not self.datasource:
+            return
+
         fsk = self.leFsk.text()
         gmk_gmn = self.cbGemarkung.currentData()
         fln = self.leFln.text()
@@ -314,6 +332,10 @@ class SearchDialog(QDialog, FORM_CLASS):
         self.open_dialog_button.setVisible(index > 2)
 
     def open_dialog_clicked(self):
+        if not self.datasource:
+            loggerutils.log_error(f"Fehler: Keine Datenquelle gesetzt")
+            return
+
         if not self.datasource.connection_success:
             loggerutils.log_error(f"Datenbankfehler:\n{self.datasource.error_text}")
             return
