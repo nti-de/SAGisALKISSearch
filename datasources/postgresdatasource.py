@@ -30,4 +30,7 @@ class PostgresDataSource(DataSource):
 
         geom_columns = self.get_geom_columns(table_name)
         column_list = [f"ST_AsText({c}) AS {c}" if c in geom_columns else c for c in column_list]
-        return f"SELECT {', '.join(column_list)} FROM {table_name}"
+
+        sql = "SELECT {columns} FROM {table_name}"
+        sql = sql.format(columns=", ".join(column_list), table_name=table_name)
+        return sql

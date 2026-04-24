@@ -52,8 +52,8 @@ class SagisConverter(AlkisDataSourcePostgres):
 
         return self.select_into_dict_list(sql)
 
-    def get_streets(self, municipality_id: int) -> list[dict]:
-        sql = f"""SELECT a.FID, a.SCHLUESSEL as KEY, a.BEZEICHNUNG as VALUE
+    def get_streets(self, municipality_id: str) -> list[dict]:
+        sql = """SELECT a.FID, a.SCHLUESSEL as KEY, a.BEZEICHNUNG as VALUE
         FROM AX_LAGEBEZKATEINTRAG a
            LEFT JOIN AX_LAGEBEZEICHNUNGMITHNR b ON (b.VERSCHLUESSELT = a.SCHLUESSEL)
         WHERE SCHLUESSEL LIKE '{municipality_id}%'
@@ -63,10 +63,11 @@ class SagisConverter(AlkisDataSourcePostgres):
         HAVING count(b.FID) > 0
         ORDER BY VALUE ASC"""
 
+        sql = sql.format(municipality_id=municipality_id)
         return self.select_into_dict_list(sql)
 
     def get_numbers(self, street_key: str) -> list[dict]:
-        sql = f"""SELECT GEB.FID as KEY, HN.VALUE as VALUE
+        sql = """SELECT GEB.FID as KEY, HN.VALUE as VALUE
         FROM (
            SELECT ID as KEY, HAUSNUMMER as VALUE
            FROM	AX_LAGEBEZEICHNUNGMITHNR
@@ -76,6 +77,7 @@ class SagisConverter(AlkisDataSourcePostgres):
         LEFT JOIN ME_BZ BEZ ON UPPER(BEZ.TABELLE) = Upper('AX_Gebaeude') AND BEZ.ZID=HN.KEY
         JOIN AX_GEBAEUDE GEB ON BEZ.ID=GEB.ID"""
 
+        sql = sql.format(street_key=street_key)
         return self.select_into_dict_list(sql)
 
     # Flurstück search

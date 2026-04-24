@@ -79,7 +79,7 @@ class AlkisDataSource(DataSource, ABC):
         pass
 
     @abstractmethod
-    def get_streets(self, municipality_id: int) -> list[dict]:
+    def get_streets(self, municipality_id: str) -> list[dict]:
         pass
 
     @abstractmethod

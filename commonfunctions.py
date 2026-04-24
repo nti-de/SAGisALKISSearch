@@ -56,7 +56,7 @@ def get_formatted_string(val, precision=3, decimals_if_needed=True) -> str:
         result = "{:.{}f}".format(float(val), precision) if precision >= 0 else f"{val}"
         result = result.rstrip("0").rstrip(".") if decimals_if_needed and "." in result else result
         result = result.replace(".", ",")
-    except:
+    except (ValueError, TypeError):
         pass
     return result
 
@@ -68,6 +68,6 @@ def get_diff_in_perc(val1, val2, precision: int) -> float:
         item2 = float(val2)
 
         diff = abs(100 - (100 * item1 / item2))
-    except:
+    except (ValueError, TypeError, ZeroDivisionError):
         pass
     return round(diff, precision)

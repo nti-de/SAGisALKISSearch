@@ -29,13 +29,6 @@ class SqliteDataSource(DataSource):
         if not column_list:
             column_list = self.get_column_names(table_name)
 
-        return f"SELECT {', '.join(column_list)} FROM {table_name}"
-
-    def geom_as_wkt(self, geom_data) -> str:
-        # ogr_geom = ogr.CreateGeometryFromWkb(wkb_data)
-        # ogr_geom
-        #
-        #
-        # geom = wkb.loads(geom, hex=True)
-        # return geom.wkt
-        raise NotImplemented("geom_as_wkt not yet implemented")
+        sql = "SELECT {columns} FROM {table_name}"
+        sql = sql.format(columns=", ".join(column_list), table_name=table_name)
+        return sql

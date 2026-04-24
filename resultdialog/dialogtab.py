@@ -1,3 +1,4 @@
+import importlib
 from typing import Union
 
 from qgis.PyQt.QtWidgets import QScrollArea, QWidget, QVBoxLayout
@@ -100,9 +101,9 @@ class DialogTab(QScrollArea):
             return None
         template = self.panel.item_template.split("\\")
         try:
-            import_string = f"from ..resources.config.GenericDialog.itemtemplates.{template[-2].lower()}.{template[-1].lower()} import {template[-1]} as item_template"
-            exec(import_string, globals())
-            # noinspection PyUnresolvedReferences
+            module_path = f"..resources.config.GenericDialog.itemtemplates.{template[-2].lower()}.{template[-1].lower()}"
+            module = importlib.import_module(module_path, package=__package__)
+            item_template = getattr(module, template[-1])
             item = item_template(self.context, self.panel, data, index, self.result_count())
             self.widget().layout().addWidget(item)
             return item

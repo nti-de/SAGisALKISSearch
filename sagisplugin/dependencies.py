@@ -1,6 +1,6 @@
 import importlib
 import os
-import subprocess
+import subprocess  # nosec B404
 import sys
 from typing import Tuple
 
@@ -42,10 +42,10 @@ def check(required_packages: list[str], path_to_bundled_packages="") -> list[str
 
 def install(package: str) -> Tuple[bool, str]:
     try:
-        output = subprocess.check_output(["python3", "-m", "pip", "install", package], stderr=subprocess.STDOUT)
+        output = subprocess.check_output(["python3", "-m", "pip", "install", package], stderr=subprocess.STDOUT)  # nosec B603, B607
         return True, output.decode("utf-8")
     except subprocess.CalledProcessError as e:
-        return False, str(e.output.decode("utf-8"))
+        return False, e.output.decode("utf-8")
     except Exception as e:
         return False, str(e)
 
