@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Optional
 
 from qgis.PyQt.QtCore import Qt
@@ -228,11 +229,26 @@ class SearchDialog(QDialog, FORM_CLASS):
         if not numbers:
             return
 
+        sorted_numbers = sorted(numbers, key=self.house_number_key)
+
         self.cbNumber.addItem("", None)
-        for number in numbers:
+        for number in sorted_numbers:
             value = utils.get_case_insensitive(number, "value")
             key = utils.get_case_insensitive(number, "key")
             self.cbNumber.addItem(value, key)
+
+    @staticmethod
+    def house_number_key(item):
+        value = item['VALUE'].strip()
+        match = re.match(r'(\d+)\s*([A-Za-z]*)', value)
+
+        if not match:
+            return float('inf'), value  # push invalid entries to the end
+
+        number = int(match.group(1))
+        suffix = match.group(2).casefold() if match.group(2) else ''
+
+        return number, suffix
 
     def populate_gemarkung(self):
         self.cbGemarkung.clear()

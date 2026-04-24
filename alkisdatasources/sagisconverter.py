@@ -68,11 +68,10 @@ class SagisConverter(AlkisDataSourcePostgres):
     def get_numbers(self, street_key: str) -> list[dict]:
         sql = f"""SELECT GEB.FID as KEY, HN.VALUE as VALUE
         FROM (
-           SELECT	ID as KEY, HAUSNUMMER as VALUE
+           SELECT ID as KEY, HAUSNUMMER as VALUE
            FROM	AX_LAGEBEZEICHNUNGMITHNR
-           WHERE 	VERSCHLUESSELT='{street_key}'
+           WHERE VERSCHLUESSELT = '{street_key}'
            AND LZE IS NULL
-           ORDER BY NULLIF(regexp_replace(hausnummer, '\D', '', 'g'), '')::int
         ) HN
         LEFT JOIN ME_BZ BEZ ON UPPER(BEZ.TABELLE) = Upper('AX_Gebaeude') AND BEZ.ZID=HN.KEY
         JOIN AX_GEBAEUDE GEB ON BEZ.ID=GEB.ID"""
