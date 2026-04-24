@@ -234,6 +234,21 @@
     </layout>
    </item>
    <item>
+    <widget class="QLabel" name="labelDemoData">
+     <property name="font">
+      <font>
+       <pointsize>7</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>&lt;a href=&quot;#&quot;&gt;Demodaten&lt;/a&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="Line" name="line_2">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

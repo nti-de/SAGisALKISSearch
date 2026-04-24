@@ -9,6 +9,7 @@ from . import loggerutils
 from . import settings
 from . import utils
 from .alkisdatasources.alkisdatasource import AlkisDataSourceType
+from .demodatadialog import DemoDataDialog
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "ui/settings.ui"))
 POSTGRESQL_CONNECTION_PATH = "PostgreSQL/connections"
@@ -32,6 +33,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         self.bAddLayers.clicked.connect(self.add_layers_clicked)
 
         self.accepted.connect(self.save_settings)
+        self.labelDemoData.linkActivated.connect(self.demo_data_link_activated)
 
         self.read_ini()
 
@@ -150,3 +152,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         path = os.path.join(os.path.dirname(__file__), "metadata.txt")
         metadata_parser.read(path)
         self.labelVersion.setText(metadata_parser.get("general", "version", fallback=""))
+
+    def demo_data_link_activated(self):
+        dlg = DemoDataDialog(self)
+        dlg.exec()
