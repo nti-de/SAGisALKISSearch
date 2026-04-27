@@ -42,10 +42,10 @@ class GenericDialog(QDialog, FORM_CLASS):
             self.spinBoxCurrentIndex.setMaximum(len(self.result_list))  # Also ensures the correct width.
             self.spinBoxCurrentIndex.valueChanged.connect(self.spinbox_value_changed)
 
-        self.buttonFirst.clicked.connect(lambda: self.set_current_object(0))
-        self.buttonPrevious.clicked.connect(lambda: self.set_current_object(self.current_object_index - 1))
-        self.buttonNext.clicked.connect(lambda: self.set_current_object(self.current_object_index + 1))
-        self.buttonLast.clicked.connect(lambda: self.set_current_object(len(self.result_list) - 1))
+        self.buttonFirst.clicked.connect(lambda: self.set_spin_box_value(0))
+        self.buttonPrevious.clicked.connect(lambda: self.set_spin_box_value(self.current_object_index - 1))
+        self.buttonNext.clicked.connect(lambda: self.set_spin_box_value(self.current_object_index + 1))
+        self.buttonLast.clicked.connect(lambda: self.set_spin_box_value(len(self.result_list) - 1))
 
         self.buttonShowCurrent.clicked.connect(self.show_current_clicked)
         self.buttonShowAll.clicked.connect(self.show_all_clicked)
@@ -84,6 +84,13 @@ class GenericDialog(QDialog, FORM_CLASS):
             tab = DialogTab(self.context, panel)
             self.tabs[i] = tab
 
+    def set_spin_box_value(self, value: int):
+        self.spinBoxCurrentIndex.setValue(value + 1)
+
+    def spinbox_value_changed(self, value: int):
+        if self.result_list and 1 <= value <= len(self.result_list):
+            self.set_current_object(value - 1)
+
     def set_current_object(self, object_index: int):
         if not self.result_list:
             return
@@ -102,12 +109,6 @@ class GenericDialog(QDialog, FORM_CLASS):
         self.buttonPrevious.setDisabled(object_index == 0)
         self.buttonNext.setDisabled(object_index == len(self.result_list) - 1)
         self.buttonLast.setDisabled(object_index == len(self.result_list) - 1)
-
-    def spinbox_value_changed(self, value: int):
-        if self.result_list and 1 <= value <= len(self.result_list):
-            self.spinBoxCurrentIndex.blockSignals(True)
-            self.set_current_object(value - 1)
-            self.spinBoxCurrentIndex.blockSignals(False)
 
     def update_tabs(self):
         current_tab = self.tabWidget.currentWidget()
