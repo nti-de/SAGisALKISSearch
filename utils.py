@@ -9,9 +9,18 @@ from .alkisdatasources.sqlitesagisconverter import SqliteSagisConverter
 from .datasources import postgreshelper, sqlitehelper
 
 
-def get_case_insensitive(dictionary: dict, key, default=None) -> Any:
+def get_case_insensitive(dictionary: dict[str, Any], key: str, default=None) -> Any:
+    # Try as is.
+    if key in dictionary:
+        return dictionary[key]
+
+    # Now it's important that the key is str.
+    if not isinstance(key, str):
+        raise TypeError(f"key must be str, not {type(key)}")
+
+    key = key.casefold()
     for k, v in dictionary.items():
-        if k.lower() == key.lower():
+        if isinstance(k, str) and k.casefold() == key:
             return v
     return default
 

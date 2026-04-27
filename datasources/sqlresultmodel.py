@@ -1,12 +1,12 @@
-from typing import List
+from typing import Any, List
 from qgis.PyQt.QtCore import QAbstractTableModel, Qt
 
 
 class SqlResultModel(QAbstractTableModel):
-    def __init__(self, data: List[dict], parent=None):
+    def __init__(self, data: List[dict[str, Any]], parent=None):
         super().__init__(parent)
         self._data = data
-        self._field_names = list(data[0].keys()) if self._data else []
+        self._field_names: list[str] = list(data[0].keys()) if self._data else []
         self._headers = dict(zip(self._field_names, self._field_names)) if self._field_names else {}
 
     def rowCount(self, parent=None) -> int:
@@ -26,7 +26,7 @@ class SqlResultModel(QAbstractTableModel):
 
         return None
 
-    def headerData(self, section, orientation, role=Qt.ItemDataRole.DisplayRole):
+    def headerData(self, section: int, orientation, role=Qt.ItemDataRole.DisplayRole):
         if role != Qt.ItemDataRole.DisplayRole:
             return None
 
@@ -36,7 +36,7 @@ class SqlResultModel(QAbstractTableModel):
 
         return section + 1
 
-    def setHeaderData(self, section, orientation, value, role=None):
+    def setHeaderData(self, section: int, orientation, value, role=None):
         if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
             key = self._field_names[section]
             self._headers[key] = value

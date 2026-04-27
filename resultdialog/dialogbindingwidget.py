@@ -7,7 +7,7 @@ from qgis.PyQt.QtWidgets import QVBoxLayout, QLabel, QTableView, QHeaderView, QF
 from .. import commonfunctions
 from .. import loggerutils
 from ..datasources import databasehelper
-from ..datasources.SqlResultModel import SqlResultModel
+from ..datasources.sqlresultmodel import SqlResultModel
 from ..sagisgndlgconfig import sagisgndlgconfig_utils
 from ..sagisgndlgconfig.configcontext import ConfigContext
 from ..sagisgndlgconfig.sagis_gn_dlg_config import SagisGnDlgConfig

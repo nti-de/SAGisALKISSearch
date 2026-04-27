@@ -100,7 +100,7 @@ class SearchDialog(QDialog, FORM_CLASS):
             self.set_database(settings.datasourcetype())
         self.check_datasource_types()
 
-    def set_database(self, datasource_type: AlkisDataSourceType):
+    def set_database(self, datasource_type: Optional[AlkisDataSourceType]):
         self.datasource = None
 
         # Reset dialog
@@ -239,7 +239,7 @@ class SearchDialog(QDialog, FORM_CLASS):
 
     @staticmethod
     def house_number_key(item):
-        value = item['VALUE'].strip()
+        value = utils.get_case_insensitive(item, "value").strip()
         match = re.match(r'(\d+)\s*([A-Za-z]*)', value)
 
         if not match:
@@ -344,8 +344,8 @@ class SearchDialog(QDialog, FORM_CLASS):
 
     def tab_changed(self, index: int):
         self.search_button.setVisible(index <= 2)
-        self.unselect_button.setVisible(index >= 2)
-        self.open_dialog_button.setVisible(index > 2)
+        self.unselect_button.setVisible(index == 3)
+        self.open_dialog_button.setVisible(index == 3)
 
     def open_dialog_clicked(self):
         if not self.datasource:
