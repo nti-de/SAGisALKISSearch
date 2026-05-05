@@ -1,0 +1,1 @@
+PROJECT_ENTRY_SCOPE = "sagis_alkis_search"

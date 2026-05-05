@@ -17,8 +17,8 @@
    <iconset>
     <normaloff>../resources/SAGis_Logo_Search.png</normaloff>../resources/SAGis_Logo_Search.png</iconset>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="0" colspan="2">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
       <number>0</number>
@@ -121,7 +121,7 @@
      </widget>
     </widget>
    </item>
-   <item>
+   <item row="1" column="1">
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

@@ -48,13 +48,11 @@ class GenericDialog(QDialog, FORM_CLASS):
         self.buttonLast.clicked.connect(lambda: self.set_spin_box_value(len(self.result_list) - 1))
 
         self.buttonShowCurrent.clicked.connect(self.show_current_clicked)
-        self.buttonShowAll.clicked.connect(self.show_all_clicked)
         self.buttonExportExcel.clicked.connect(self.export_excel_clicked)
         self.buttonClose.clicked.connect(self.close)
 
         if not self.context.result_layer:
             self.buttonShowCurrent.setDisabled(True)
-            self.buttonShowAll.setDisabled(True)
 
         if not self.result_list:
             self.toolBar.setDisabled(True)
@@ -156,12 +154,6 @@ class GenericDialog(QDialog, FORM_CLASS):
         if not current or not self.context.primary_key_name:
             return
         searchresulthandler.highlight_result(self.context.result_layer, utils.get_case_insensitive(current, self.context.primary_key_name))
-
-    def show_all_clicked(self):
-        if not self.result_list or not self.context.primary_key_name:
-            return
-        values = [utils.get_case_insensitive(r, self.context.primary_key_name) for r in self.result_list]
-        searchresulthandler.highlight_result(self.context.result_layer, values)
 
     def export_excel_clicked(self):
         object_ids = [utils.get_case_insensitive(r, self.context.primary_key_name) for r in self.result_list]

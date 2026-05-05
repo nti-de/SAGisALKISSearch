@@ -5,6 +5,7 @@ from typing import Any, Optional
 
 from qgis.core import QgsAbstractDatabaseProviderConnection, QgsLayerTreeGroup, QgsProject
 
+from ..constants import PROJECT_ENTRY_SCOPE
 from ..datasources.datasource import DataSource
 from ..datasources.postgresdatasource import PostgresDataSource
 from ..datasources.sqlitedatasource import SqliteDataSource
@@ -28,7 +29,6 @@ class TableInfo:
 
 
 class AlkisDataSource(DataSource, ABC):
-    PROJECT_ENTRY_SCOPE = "sagis_alkis_search"
 
     def __init__(self, connection: QgsAbstractDatabaseProviderConnection):
         super().__init__(connection)
@@ -50,10 +50,10 @@ class AlkisDataSource(DataSource, ABC):
 
     def save_result_layers(self) -> None:
         p = QgsProject.instance()
-        p.writeEntry(self.PROJECT_ENTRY_SCOPE, "datasourcetype", self.datasource_type)
-        p.writeEntry(self.PROJECT_ENTRY_SCOPE, "street_result_layer", self.street_result_layer)
-        p.writeEntry(self.PROJECT_ENTRY_SCOPE, "building_result_layer", self.building_result_layer)
-        p.writeEntry(self.PROJECT_ENTRY_SCOPE, "flurstueck_result_layer", self.flurstueck_result_layer)
+        p.writeEntry(PROJECT_ENTRY_SCOPE, "datasourcetype", self.datasource_type)
+        p.writeEntry(PROJECT_ENTRY_SCOPE, "street_result_layer", self.street_result_layer)
+        p.writeEntry(PROJECT_ENTRY_SCOPE, "building_result_layer", self.building_result_layer)
+        p.writeEntry(PROJECT_ENTRY_SCOPE, "flurstueck_result_layer", self.flurstueck_result_layer)
 
     @abstractmethod
     def add_layers(self) -> None:

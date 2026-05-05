@@ -5,6 +5,7 @@ from typing import Optional
 from qgis.core import QgsProject
 
 from . import loggerutils
+from .constants import PROJECT_ENTRY_SCOPE
 from .datasources.datasource import DataSource
 from .resultdialog.genericdialog import GenericDialog
 from .sagisgndlgconfig.configcontext import ConfigContext
@@ -45,7 +46,7 @@ class ResultDialogBuilder:
     def build(self):
         if not self.valid:
             return
-        layer_id, ok = QgsProject.instance().readEntry("sagis_alkis_search", "flurstueck_result_layer")
+        layer_id, ok = QgsProject.instance().readEntry(PROJECT_ENTRY_SCOPE, "flurstueck_result_layer")
         result_layer = QgsProject.instance().mapLayer(layer_id) if ok else None
 
         # Copy datasource

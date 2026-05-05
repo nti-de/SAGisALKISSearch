@@ -6,6 +6,7 @@ import os.path
 
 from . import loggerutils, PLUGIN_NAME
 from . import utils
+from .constants import PROJECT_ENTRY_SCOPE
 from .resultdialogbuilder import ResultDialogBuilder
 from .sagisplugin.sagispluginbase import SagisPluginBase
 from .searchdialog import SearchDialog
@@ -106,8 +107,7 @@ class SagisAlkisSearchPlugin(SagisPluginBase):
         if not SearchDialog.check_datasource_types():
             return
 
-        project_entry_scope = "sagis_alkis_search"
-        layer_id, ok = QgsProject.instance().readEntry(project_entry_scope, "flurstueck_result_layer")
+        layer_id, ok = QgsProject.instance().readEntry(PROJECT_ENTRY_SCOPE, "flurstueck_result_layer")
         layer = QgsProject.instance().mapLayer(layer_id) if ok else None
         if not isinstance(layer, QgsVectorLayer):
             iface.messageBar().pushInfo(title="SAGis ALKIS Suche", message="Flurstücklayer existiert nicht",)

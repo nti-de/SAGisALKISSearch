@@ -1,6 +1,7 @@
 from typing import Any, Optional
 
 from qgis.core import QgsMapLayer
+from qgis.PyQt.QtWidgets import QMessageBox
 
 from . import settings
 from .alkisdatasources.alkisdatasource import AlkisDataSource, AlkisDataSourceType
@@ -52,3 +53,4 @@ def set_layer_required(layer: QgsMapLayer, required: bool) -> None:
         flags |= QgsMapLayer.LayerFlag.Removable
 
     layer.setFlags(QgsMapLayer.LayerFlag(flags))
+

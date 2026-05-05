@@ -2,11 +2,11 @@ import os
 import re
 from typing import Optional
 
-from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtGui import QIntValidator
-from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QListWidgetItem, QWidget, QVBoxLayout, QLabel, QListWidget
+from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QWidget, QVBoxLayout, QLabel, QListWidget, QListWidgetItem
 from qgis.PyQt import uic, QtGui
-from qgis.core import Qgis, QgsProject, QgsVectorLayer
+from qgis.core import Qgis, QgsApplication, QgsProject, QgsVectorLayer
 from qgis.utils import iface
 
 from . import loggerutils
@@ -14,8 +14,11 @@ from . import searchresulthandler
 from . import settings
 from . import utils
 from .alkisdatasources.alkisdatasource import AlkisDataSource, AlkisDataSourceType
+from .constants import PROJECT_ENTRY_SCOPE
 from .resultdialogbuilder import ResultDialogBuilder
+from .tasks.flurstuecksearchtask import FlurstueckSearchTask
 from .ui.extendedcombobox import ExtendedComboBox
+from .ui.taskprogressbar import TaskProgressBar
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "ui/search.ui"))
 SGBMEBL = {
@@ -81,6 +84,11 @@ class SearchDialog(QDialog, FORM_CLASS):
         self.unselect_button.setVisible(False)
         self.unselect_button.clicked.connect(searchresulthandler.unselect_flurstuecke)
 
+        self.task_progress_bar = TaskProgressBar(self)
+        self.task_progress_bar.task_started.connect(self._on_task_started)
+        self.task_progress_bar.task_finished.connect(self._on_task_finished)
+        self.layout().addWidget(self.task_progress_bar, 1, 0)
+
         self.result_list_widget: Optional[QListWidget] = None
 
         self.datasource: Optional[AlkisDataSource] = None
@@ -94,11 +102,18 @@ class SearchDialog(QDialog, FORM_CLASS):
         self.tab_changed(self.tabWidget.currentIndex())
         self.tabWidget.currentChanged.connect(self.tab_changed)
 
+        self.search_task: Optional[FlurstueckSearchTask] = None
+
     def showEvent(self, e: QtGui.QShowEvent) -> None:
         super().showEvent(e)
         if settings.datasourcetype() != self.last_database_type or settings.connection() != self.last_connection_name:
             self.set_database(settings.datasourcetype())
         self.check_datasource_types()
+
+    def reject(self):
+        if self.search_task and self.search_task.isActive():
+            self.search_task.cancel()
+        super().reject()
 
     def set_database(self, datasource_type: Optional[AlkisDataSourceType]):
         self.datasource = None
@@ -138,7 +153,7 @@ class SearchDialog(QDialog, FORM_CLASS):
         Returns False otherwise.
         """
 
-        project_database_type, ok = QgsProject.instance().readEntry("sagis_alkis_search", "datasourcetype")
+        project_database_type, ok = QgsProject.instance().readEntry(PROJECT_ENTRY_SCOPE, "datasourcetype")
         if not ok or not settings.datasourcetype() or project_database_type == settings.datasourcetype().value:
             return True
         message = f"Eingestellter Datenbanktyp ('{settings.datasourcetype().value}') stimmt nicht mit dem im Projekt gespeicherten ('{project_database_type}') überein"
@@ -307,14 +322,75 @@ class SearchDialog(QDialog, FORM_CLASS):
         fsn_zae = self.leFsnZae.text()
         fsn_nen = self.leFsnNen.text()
 
-        self.flurstueck_results = self.datasource.search_flurstuecke(fsk=fsk, gmk_gmn=gmk_gmn, fln=fln, fsn_zae=fsn_zae, fsn_nen=fsn_nen)
+        self.search_task = FlurstueckSearchTask(
+            self.datasource, fsk=fsk, gmk_gmn=gmk_gmn, fln=fln, fsn_zae=fsn_zae, fsn_nen=fsn_nen)
+        self.search_task.taskCompleted.connect(self.flurstueck_search_task_completed)
+        self.search_task.taskTerminated.connect(self.flurstueck_search_task_terminated)
+        task_id = QgsApplication.taskManager().addTask(self.search_task)
+        self.task_progress_bar.track(task_id)
 
-        p_key_values = [utils.get_case_insensitive(r, "fid") for r in self.flurstueck_results]
-        layer = searchresulthandler.flurstueck_search(p_key_values)
+    def flurstueck_search_task_completed(self):
+        if not self.search_task:
+            return
+        self.flurstueck_results = self.search_task.results
+        self.search_task = None
 
-        self.create_result_tab(self.flurstueck_results, layer)
+        layer_id, ok = QgsProject.instance().readEntry(PROJECT_ENTRY_SCOPE, "flurstueck_result_layer")
+        layer = QgsProject.instance().mapLayer(layer_id) if ok else None
 
-    def create_result_tab(self, results: list[dict], layer: QgsVectorLayer):
+        self._start_list_population(layer)
+
+    def flurstueck_search_task_terminated(self):
+        self.search_task = None
+
+    def _start_list_population(self, layer: Optional[QgsVectorLayer]) -> None:
+        self.result_list_widget = QListWidget()
+        self.result_list_widget.setUniformItemSizes(True)
+
+        if layer:
+            self.result_list_widget.itemClicked.connect(
+                lambda item: self._on_list_item_clicked(layer, item)
+            )
+
+        results_count = len(self.flurstueck_results)
+        self.task_progress_bar.begin_manual(results_count)
+        self._populate_list_chunked(
+            on_done=lambda: self._on_list_populated(results_count, layer)
+        )
+
+    def _populate_list_chunked(self, offset: int = 0, chunk_size: int = 100, on_done=None) -> None:
+        chunk = self.flurstueck_results[offset:offset + chunk_size]
+        if not chunk:
+            self.task_progress_bar.end_manual()
+            if on_done:
+                on_done()
+            return
+
+        results_count = len(self.flurstueck_results)
+        tooltip = "Suchergebnis in der Karte zeigen."
+        self.result_list_widget.setUpdatesEnabled(False)
+        try:
+            for r in chunk:
+                caption = utils.get_case_insensitive(r, "caption", "-")
+                fid = utils.get_case_insensitive(r, "fid")
+                item = QListWidgetItem(caption)
+                item.setData(Qt.ItemDataRole.UserRole, fid)
+                item.setToolTip(tooltip)
+                self.result_list_widget.addItem(item)
+        finally:
+            self.result_list_widget.setUpdatesEnabled(True)
+
+        next_offset = offset + chunk_size
+        self.task_progress_bar.update_manual(min(next_offset, results_count))
+
+        if next_offset < results_count:
+            QTimer.singleShot(0, lambda: self._populate_list_chunked(next_offset, chunk_size, on_done))
+        else:
+            self.task_progress_bar.end_manual()
+            if on_done:
+                on_done()
+
+    def _on_list_populated(self, result_count: int, layer: Optional[QgsVectorLayer]) -> None:
         self.tabWidget.removeTab(3)
 
         tab_page = QWidget()
@@ -322,25 +398,22 @@ class SearchDialog(QDialog, FORM_CLASS):
         layout = QVBoxLayout()
         tab_page.setLayout(layout)
         count_label = QLabel(
-            f"Ihre Suche lieferte {len(results) if len(results) > 0 else 'keine'} Ergebnis{'se' if len(results) != 1 else ''}."
+            f"Ihre Suche lieferte {result_count if result_count > 0 else 'keine'} Ergebnis{'se' if result_count != 1 else ''}."
         )
-        self.result_list_widget = QListWidget()
         layout.addWidget(count_label)
         layout.addWidget(self.result_list_widget)
 
-        for r in results:
-            caption = utils.get_case_insensitive(r, "caption", "-")
-            fid = utils.get_case_insensitive(r, "fid")
-            item = QListWidgetItem(caption, self.result_list_widget)
-            item.setData(Qt.ItemDataRole.UserRole, fid)
-            item.setToolTip("Suchergebnis in der Karte zeigen.")
-
-        if layer:
-            self.result_list_widget.itemClicked.connect(lambda i: searchresulthandler.highlight_result(layer, i.data(Qt.ItemDataRole.UserRole)))
-
-        self.open_dialog_button.setEnabled(len(results) > 0)
-        self.unselect_button.setEnabled(len(results) > 0)
+        self.open_dialog_button.setEnabled(result_count > 0)
+        self.unselect_button.setEnabled(result_count > 0)
         self.tabWidget.setCurrentIndex(index)
+
+        # Select
+        p_key_values = [utils.get_case_insensitive(r, "fid") for r in self.flurstueck_results]
+        searchresulthandler.flurstueck_search(layer, p_key_values)
+
+    @staticmethod
+    def _on_list_item_clicked(layer: QgsVectorLayer, item: QListWidgetItem):
+        searchresulthandler.highlight_result(layer, item.data(Qt.ItemDataRole.UserRole))
 
     def tab_changed(self, index: int):
         self.search_button.setVisible(index <= 2)
@@ -369,3 +442,19 @@ class SearchDialog(QDialog, FORM_CLASS):
             current_index=index
         )
         dlg_builder.build()
+
+    def _on_task_started(self) -> None:
+        self.tabWidget.setEnabled(False)
+        self.search_button.setEnabled(False)
+        self.unselect_button.setEnabled(False)
+        self.open_dialog_button.setEnabled(False)
+        self.setCursor(Qt.CursorShape.WaitCursor)
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Close).setCursor(Qt.CursorShape.ArrowCursor)
+
+    def _on_task_finished(self) -> None:
+        self.tabWidget.setEnabled(True)
+        self.search_button.setEnabled(True)
+        self.unselect_button.setEnabled(True)
+        self.open_dialog_button.setEnabled(True)
+        self.unsetCursor()
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Close).unsetCursor()

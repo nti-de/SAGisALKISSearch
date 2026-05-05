@@ -147,22 +147,6 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="buttonShowAll">
-        <property name="minimumSize">
-         <size>
-          <width>106</width>
-          <height>0</height>
-         </size>
-        </property>
-        <property name="toolTip">
-         <string>Alle Objekte in der Karte zeigen</string>
-        </property>
-        <property name="text">
-         <string>Alle Objekt anzeigen</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QPushButton" name="buttonExportExcel">
         <property name="toolTip">
          <string>Exportieren (Excel Format)</string>
