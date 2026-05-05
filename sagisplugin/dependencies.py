@@ -97,6 +97,7 @@ def check_packages(required_packages: list[str], plugin_name="", plugin_path="")
             level=Qgis.MessageLevel.Critical,
             duration=0
         )
+        return False
     else:
         iface.messageBar().pushMessage(
             plugin_name,
