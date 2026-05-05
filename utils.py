@@ -30,10 +30,10 @@ def create_datasource() -> Optional[AlkisDataSource]:
     datasource_type = settings.datasourcetype()
     if datasource_type == AlkisDataSourceType.SAGisPgSql:
         connection = postgreshelper.get_connection(settings.connection())
-        datasource = SagisConverter(connection)
+        datasource = SagisConverter(connection) if connection else None
     elif datasource_type == AlkisDataSourceType.SAGisSqlite:
         connection = sqlitehelper.get_connection(settings.file())
-        datasource = SqliteSagisConverter(connection)
+        datasource = SqliteSagisConverter(connection) if connection else None
     else:
         datasource = None
 

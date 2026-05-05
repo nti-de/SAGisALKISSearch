@@ -94,9 +94,10 @@ class SagisAlkisSearchPlugin(SagisPluginBase):
             self.first_start = False
             self.dlg = SearchDialog(self.iface.mainWindow())
 
-        self.dlg.show()
-        self.dlg.activateWindow()
-        self.dlg.show()
+        if self.dlg.isVisible():
+            self.dlg.activateWindow()
+        else:
+            self.dlg.show()
 
     def open_settings(self):
         dlg = SettingsDialog(self.iface.mainWindow())

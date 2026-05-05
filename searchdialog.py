@@ -5,7 +5,7 @@ from typing import Optional
 from qgis.PyQt.QtCore import Qt, QTimer
 from qgis.PyQt.QtGui import QIntValidator
 from qgis.PyQt.QtWidgets import QDialog, QDialogButtonBox, QWidget, QVBoxLayout, QLabel, QListWidget, QListWidgetItem
-from qgis.PyQt import uic, QtGui
+from qgis.PyQt import uic, QtCore
 from qgis.core import Qgis, QgsApplication, QgsProject, QgsVectorLayer
 from qgis.utils import iface
 
@@ -92,9 +92,9 @@ class SearchDialog(QDialog, FORM_CLASS):
         self.result_list_widget: Optional[QListWidget] = None
 
         self.datasource: Optional[AlkisDataSource] = None
-        self.last_connection_name = settings.connection()
         self.last_database_type = settings.datasourcetype()
-        self.set_database(settings.datasourcetype())
+        self.last_connection_identifier = ""
+        self.set_database()
 
         self.cbMunicipality.currentIndexChanged.connect(self.populate_streets)
         self.cbStreet.currentIndexChanged.connect(self.populate_numbers)
@@ -104,18 +104,24 @@ class SearchDialog(QDialog, FORM_CLASS):
 
         self.search_task: Optional[FlurstueckSearchTask] = None
 
-    def showEvent(self, e: QtGui.QShowEvent) -> None:
-        super().showEvent(e)
-        if settings.datasourcetype() != self.last_database_type or settings.connection() != self.last_connection_name:
-            self.set_database(settings.datasourcetype())
-        self.check_datasource_types()
+    def changeEvent(self, e: QtCore.QEvent) -> None:
+        super().changeEvent(e)
+        if e.type() == QtCore.QEvent.Type.ActivationChange and self.isActiveWindow():
+            if self.last_database_type != settings.datasourcetype():
+                self.set_database()
+            elif self.last_database_type == AlkisDataSourceType.SAGisPgSql and self.last_connection_identifier != settings.connection():
+                self.set_database()
+            elif self.last_database_type == AlkisDataSourceType.SAGisSqlite and self.last_connection_identifier != settings.file():
+                self.set_database()
+
+            self.check_datasource_types()
 
     def reject(self):
         if self.search_task and self.search_task.isActive():
             self.search_task.cancel()
         super().reject()
 
-    def set_database(self, datasource_type: Optional[AlkisDataSourceType]):
+    def set_database(self):
         self.datasource = None
 
         # Reset dialog
@@ -139,8 +145,13 @@ class SearchDialog(QDialog, FORM_CLASS):
             loggerutils.log_error(message)
             return
 
-        self.last_database_type = datasource_type
-        self.last_connection_name = settings.connection()
+        self.last_connection_identifier = ""
+        self.last_database_type = settings.datasourcetype()
+
+        if self.last_database_type == AlkisDataSourceType.SAGisPgSql:
+            self.last_connection_identifier = settings.connection()
+        elif self.last_database_type == AlkisDataSourceType.SAGisSqlite:
+            self.last_connection_identifier = settings.file()
 
         self.populate_names()
         self.populate_municipalities()
